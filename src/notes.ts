@@ -28,7 +28,7 @@ namespace PersistentHighlighter {
           continue;
         }
 
-        this.renderNote(this.clampNoteToViewport(note));
+        this.renderNote(this.clampNoteToDocument(note));
         restoredCount += 1;
       }
 
@@ -37,9 +37,10 @@ namespace PersistentHighlighter {
 
     observeViewport(): void {
       window.addEventListener("resize", () => {
+        this.syncLayerBounds();
         this.noteElements.forEach((element, noteId) => {
           const note = this.readNoteFromElement(element, noteId);
-          const clamped = this.clampNoteToViewport(note);
+          const clamped = this.clampNoteToDocument(note);
           this.applyNoteLayout(element, clamped);
           this.scheduleSave(clamped);
         });
@@ -48,6 +49,7 @@ namespace PersistentHighlighter {
 
     private ensureContainer(): HTMLElement {
       if (this.container?.isConnected) {
+        this.syncLayerBounds();
         return this.container;
       }
 
@@ -55,20 +57,33 @@ namespace PersistentHighlighter {
       container.className = "ph-note-layer";
       document.documentElement.appendChild(container);
       this.container = container;
+      this.syncLayerBounds();
       return container;
+    }
+
+    private syncLayerBounds(): void {
+      if (!this.container) {
+        return;
+      }
+
+      const width = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+      const height = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+      this.container.style.width = `${width}px`;
+      this.container.style.height = `${height}px`;
     }
 
     private buildNewNote(color: NoteColor): PostItNote {
       const existingCount = this.noteElements.size;
-      const width = 260;
-      const height = 220;
-      const x = Math.max(24, Math.min(window.innerWidth - width - 24, 40 + existingCount * 24));
-      const y = Math.max(24, Math.min(window.innerHeight - height - 24, 80 + existingCount * 24));
+      const width = 280;
+      const height = 230;
+      const x = window.scrollX + Math.max(24, Math.min(window.innerWidth - width - 24, 40 + existingCount * 24));
+      const y = window.scrollY + Math.max(24, Math.min(window.innerHeight - height - 24, 88 + existingCount * 24));
       const timestamp = new Date().toISOString();
 
       return {
         id: createNoteId(),
         url: normalizeUrl(window.location.href),
+        title: "Nueva nota",
         text: "",
         color,
         x,
@@ -86,12 +101,16 @@ namespace PersistentHighlighter {
       const noteElement = document.createElement("article");
       noteElement.className = `ph-note ph-note--${note.color}`;
       noteElement.dataset.noteId = note.id;
+      noteElement.dataset.createdAt = note.createdAt;
       noteElement.innerHTML = `
         <header class="ph-note__header">
-          <span class="ph-note__drag">Post-it</span>
+          <div class="ph-note__header-main">
+            <span class="ph-note__drag">Mover</span>
+            <input class="ph-note__title" type="text" value="" aria-label="Nombre de la nota" />
+          </div>
           <div class="ph-note__actions">
             <button class="ph-note__icon-button" data-action="minimize" type="button" aria-label="Minimizar">_</button>
-            <button class="ph-note__icon-button" data-action="delete" type="button" aria-label="Eliminar">×</button>
+            <button class="ph-note__icon-button" data-action="delete" type="button" aria-label="Eliminar">x</button>
           </div>
         </header>
         <div class="ph-note__palette"></div>
@@ -99,6 +118,19 @@ namespace PersistentHighlighter {
           <textarea class="ph-note__textarea" placeholder="Escribe tu nota..."></textarea>
         </label>
       `;
+
+      const titleInput = noteElement.querySelector<HTMLInputElement>(".ph-note__title");
+      if (titleInput) {
+        titleInput.value = note.title;
+        titleInput.addEventListener("input", () => {
+          const nextNote = {
+            ...this.readNoteFromElement(noteElement, note.id),
+            title: titleInput.value,
+            updatedAt: new Date().toISOString()
+          };
+          this.scheduleSave(nextNote);
+        });
+      }
 
       const palette = noteElement.querySelector<HTMLElement>(".ph-note__palette");
       for (const option of NOTE_COLOR_OPTIONS) {
@@ -108,7 +140,11 @@ namespace PersistentHighlighter {
         colorButton.dataset.color = option.id;
         colorButton.setAttribute("aria-label", `Color ${option.label}`);
         colorButton.addEventListener("click", () => {
-          const nextNote = { ...this.readNoteFromElement(noteElement, note.id), color: option.id, updatedAt: new Date().toISOString() };
+          const nextNote = {
+            ...this.readNoteFromElement(noteElement, note.id),
+            color: option.id,
+            updatedAt: new Date().toISOString()
+          };
           this.applyNoteLayout(noteElement, nextNote);
           this.scheduleSave(nextNote);
         });
@@ -152,21 +188,21 @@ namespace PersistentHighlighter {
 
       const dragHandle = noteElement.querySelector<HTMLElement>(".ph-note__drag");
       dragHandle?.addEventListener("pointerdown", (event) => {
-        if ((event.target as HTMLElement).closest("button")) {
+        if ((event.target as HTMLElement).closest("button, input")) {
           return;
         }
 
-        // Arrastramos solo desde la cabecera para no interferir con la edición del texto.
+        // Arrastramos desde la cabecera y usamos coordenadas del documento para mover la nota por toda la pagina.
         const startNote = this.readNoteFromElement(noteElement, note.id);
-        const offsetX = event.clientX - startNote.x;
-        const offsetY = event.clientY - startNote.y;
+        const offsetX = event.pageX - startNote.x;
+        const offsetY = event.pageY - startNote.y;
         dragHandle.setPointerCapture(event.pointerId);
 
         const handleMove = (moveEvent: PointerEvent) => {
-          const movedNote = this.clampNoteToViewport({
+          const movedNote = this.clampNoteToDocument({
             ...this.readNoteFromElement(noteElement, note.id),
-            x: moveEvent.clientX - offsetX,
-            y: moveEvent.clientY - offsetY,
+            x: moveEvent.pageX - offsetX,
+            y: moveEvent.pageY - offsetY,
             updatedAt: new Date().toISOString()
           });
           this.applyNoteLayout(noteElement, movedNote);
@@ -204,7 +240,7 @@ namespace PersistentHighlighter {
           ...this.readNoteFromElement(noteElement, noteId),
           updatedAt: new Date().toISOString()
         };
-        this.scheduleSave(this.clampNoteToViewport(note));
+        this.scheduleSave(this.clampNoteToDocument(note));
       });
 
       observer.observe(noteElement);
@@ -217,11 +253,12 @@ namespace PersistentHighlighter {
     }
 
     private applyNoteLayout(noteElement: HTMLElement, note: PostItNote): void {
-      const clampedNote = this.clampNoteToViewport(note);
+      const clampedNote = this.clampNoteToDocument(note);
+      this.syncLayerBounds();
       noteElement.style.left = `${clampedNote.x}px`;
       noteElement.style.top = `${clampedNote.y}px`;
       noteElement.style.width = `${clampedNote.width}px`;
-      noteElement.style.height = `${clampedNote.isMinimized ? 56 : clampedNote.height}px`;
+      noteElement.style.height = `${clampedNote.isMinimized ? 60 : clampedNote.height}px`;
       noteElement.dataset.x = String(clampedNote.x);
       noteElement.dataset.y = String(clampedNote.y);
       noteElement.dataset.width = String(clampedNote.width);
@@ -237,16 +274,18 @@ namespace PersistentHighlighter {
     }
 
     private readNoteFromElement(noteElement: HTMLElement, noteId: string): PostItNote {
+      const titleInput = noteElement.querySelector<HTMLInputElement>(".ph-note__title");
       const textarea = noteElement.querySelector<HTMLTextAreaElement>(".ph-note__textarea");
       return {
         id: noteId,
         url: normalizeUrl(window.location.href),
+        title: titleInput?.value || "Nueva nota",
         text: textarea?.value || "",
         color: (noteElement.dataset.color as NoteColor) || "yellow",
-        x: Number(noteElement.dataset.x || 32),
-        y: Number(noteElement.dataset.y || 64),
-        width: Number(noteElement.dataset.width || noteElement.offsetWidth || 260),
-        height: Number(noteElement.dataset.height || noteElement.offsetHeight || 220),
+        x: Number(noteElement.dataset.x || window.scrollX + 32),
+        y: Number(noteElement.dataset.y || window.scrollY + 72),
+        width: Number(noteElement.dataset.width || noteElement.offsetWidth || 280),
+        height: Number(noteElement.dataset.height || noteElement.offsetHeight || 230),
         isMinimized: noteElement.dataset.minimized === "true",
         createdAt: noteElement.dataset.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -256,17 +295,19 @@ namespace PersistentHighlighter {
     private scheduleSave(note: PostItNote): void {
       window.clearTimeout(this.saveTimers.get(note.id));
       const timerId = window.setTimeout(() => {
-        void this.storage.saveNote(this.clampNoteToViewport(note));
+        void this.storage.saveNote(this.clampNoteToDocument(note));
       }, 180);
       this.saveTimers.set(note.id, timerId);
     }
 
-    private clampNoteToViewport(note: PostItNote): PostItNote {
-      const minVisible = 56;
-      const width = Math.max(220, Math.min(note.width, Math.max(220, window.innerWidth - 24)));
-      const height = Math.max(140, Math.min(note.height, Math.max(140, window.innerHeight - 24)));
-      const maxX = Math.max(8, window.innerWidth - minVisible);
-      const maxY = Math.max(8, window.innerHeight - minVisible);
+    private clampNoteToDocument(note: PostItNote): PostItNote {
+      const minVisible = 60;
+      const maxDocumentWidth = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+      const maxDocumentHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+      const width = Math.max(220, Math.min(note.width, Math.max(220, maxDocumentWidth - 24)));
+      const height = Math.max(150, Math.min(note.height, Math.max(150, maxDocumentHeight - 24)));
+      const maxX = Math.max(8, maxDocumentWidth - minVisible);
+      const maxY = Math.max(8, maxDocumentHeight - minVisible);
 
       return {
         ...note,

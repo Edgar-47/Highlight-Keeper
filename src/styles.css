@@ -370,14 +370,15 @@ body.popup-shell {
 }
 
 .ph-note-layer {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
   z-index: 2147483000;
   pointer-events: none;
 }
 
 .ph-note {
-  position: fixed;
+  position: absolute;
   display: grid;
   grid-template-rows: auto auto 1fr;
   min-width: 220px;
@@ -442,6 +443,14 @@ body.popup-shell {
   padding: 10px 12px 0;
 }
 
+.ph-note__header-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .ph-note__drag {
   font-size: 12px;
   font-weight: 700;
@@ -453,6 +462,21 @@ body.popup-shell {
 
 .ph-note__drag:active {
   cursor: grabbing;
+}
+
+.ph-note__title {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #1f1d1a;
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+}
+
+.ph-note__title::placeholder {
+  color: rgba(31, 29, 26, 0.52);
 }
 
 .ph-note__actions {
