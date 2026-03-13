@@ -16,11 +16,36 @@
     const range = liveRange || (this.lastSelectionRange ? this.lastSelectionRange.cloneRange() : null);
     const selectedText = namespace.normalizeText(range ? range.toString() : "");
     if (!selectedText) {
-      throw new Error("Select some text before creating a highlight.");
+      throw new Error("Selecciona un texto antes de resaltar.");
     }
 
     if (!range || !this.isRangeHighlightable(range)) {
-      throw new Error("This selection cannot be highlighted safely.");
+      const selectedHighlight = this.findHighlightElementForNode(range ? range.commonAncestorContainer : null);
+      if (!selectedHighlight) {
+        throw new Error("No se puede resaltar esa seleccion de forma segura.");
+      }
+
+      const existingId = selectedHighlight.getAttribute(namespace.HIGHLIGHT_ATTR);
+      if (!existingId) {
+        throw new Error("No se pudo actualizar el resaltado seleccionado.");
+      }
+
+      const existingRecords = await this.storage.getHighlights(window.location.href);
+      const existingRecord = existingRecords.find(function findById(record) {
+        return record.id === existingId;
+      });
+      if (!existingRecord) {
+        throw new Error("No se encontró el resaltado existente.");
+      }
+
+      if (existingRecord.color === color) {
+        throw new Error("Ese texto ya tiene ese color.");
+      }
+
+      const updatedRecord = Object.assign({}, existingRecord, { color: color });
+      this.updateHighlightElementColor(selectedHighlight, color);
+      await this.storage.saveHighlight(updatedRecord);
+      return updatedRecord;
     }
 
     const record = this.createRecordFromRange(
@@ -30,8 +55,25 @@
       namespace.normalizeUrl(window.location.href)
     );
     const existing = await this.storage.getHighlights(record.url);
-    if (this.storage.isDuplicate(existing, record)) {
-      throw new Error("A matching highlight already exists on this page.");
+    const matchingRecord = this.storage.findMatchingHighlight(existing, record);
+    if (matchingRecord) {
+      if (matchingRecord.color === color) {
+        throw new Error("Ese texto ya tiene ese color.");
+      }
+
+      const updatedRecord = Object.assign({}, matchingRecord, { color: color });
+      const existingElement = this.findHighlightElement(matchingRecord.id);
+      if (existingElement) {
+        this.updateHighlightElementColor(existingElement, color);
+      } else {
+        this.wrapRange(range, updatedRecord);
+      }
+
+      if (selection) {
+        selection.removeAllRanges();
+      }
+      await this.storage.saveHighlight(updatedRecord);
+      return updatedRecord;
     }
 
     this.wrapRange(range, record);
@@ -362,6 +404,24 @@
     return document.querySelector(
       "[" + namespace.HIGHLIGHT_ATTR + '="' + CSS.escape(highlightId) + '"]'
     );
+  };
+
+  HighlightRenderer.prototype.findHighlightElementForNode = function findHighlightElementForNode(node) {
+    if (!node) {
+      return null;
+    }
+
+    const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+    return element ? element.closest("." + namespace.HIGHLIGHT_CLASS) : null;
+  };
+
+  HighlightRenderer.prototype.updateHighlightElementColor = function updateHighlightElementColor(element, color) {
+    const colorClasses = namespace.COLOR_OPTIONS.map(function mapColor(option) {
+      return namespace.HIGHLIGHT_CLASS + "--" + option.id;
+    });
+    element.classList.remove.apply(element.classList, colorClasses);
+    element.classList.add(namespace.HIGHLIGHT_CLASS + "--" + color);
+    element.setAttribute("data-ph-color", color);
   };
 
   HighlightRenderer.prototype.getContextSnippet = function getContextSnippet(range, side) {

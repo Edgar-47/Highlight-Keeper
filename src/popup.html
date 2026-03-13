@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,37 +9,34 @@
   <body class="popup-shell">
     <main class="popup">
       <section class="hero">
-        <p class="eyebrow">Persistent Highlighter</p>
-        <h1>Save highlights that come back when you do.</h1>
-        <p id="page-url" class="page-url">Loading page…</p>
+        <p class="eyebrow">Resaltador Persistente</p>
+        <h1>Guarda lo importante y recupéralo al volver.</h1>
+        <p id="page-url" class="page-url">Cargando página...</p>
       </section>
 
       <section class="panel">
         <div class="panel-row">
-          <h2>Color</h2>
-          <div class="color-grid">
-            <button class="color-option color-option--yellow" data-color="yellow" type="button" aria-label="Yellow"></button>
-            <button class="color-option color-option--green" data-color="green" type="button" aria-label="Green"></button>
-            <button class="color-option color-option--blue" data-color="blue" type="button" aria-label="Blue"></button>
-            <button class="color-option color-option--pink" data-color="pink" type="button" aria-label="Pink"></button>
-            <button class="color-option color-option--orange" data-color="orange" type="button" aria-label="Orange"></button>
-          </div>
+          <h2>Color del resaltado</h2>
+          <span class="count-pill count-pill--soft">8</span>
         </div>
+        <div id="color-options" class="color-list"></div>
 
         <div class="actions">
-          <button id="highlight-selection" class="primary-button" type="button">Highlight selection</button>
-          <button id="clear-page" class="secondary-button" type="button">Clear page</button>
+          <button id="highlight-selection" class="primary-button" type="button">Resaltar selección</button>
+          <button id="restore-page" class="secondary-button" type="button">Reaplicar</button>
+          <button id="clear-page" class="secondary-button secondary-button--danger" type="button">Limpiar página</button>
         </div>
-        <p id="status" class="status">Ready.</p>
+        <p class="helper-text">Consejo: también puedes seleccionar texto y usar clic derecho.</p>
+        <p id="status" class="status">Listo.</p>
       </section>
 
       <section class="panel">
         <div class="panel-row">
-          <h2>Saved highlights</h2>
+          <h2>Resaltados guardados</h2>
           <span id="highlight-count" class="count-pill">0</span>
         </div>
         <div id="highlight-list" class="highlight-list">
-          <p class="empty-state">Loading…</p>
+          <p class="empty-state">Cargando...</p>
         </div>
       </section>
     </main>

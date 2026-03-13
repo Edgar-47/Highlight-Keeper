@@ -2,11 +2,14 @@
 
 namespace PersistentHighlighterBackground {
   const COLOR_OPTIONS = [
-    { id: "yellow", label: "Yellow" },
-    { id: "green", label: "Green" },
-    { id: "blue", label: "Blue" },
-    { id: "pink", label: "Pink" },
-    { id: "orange", label: "Orange" }
+    { id: "yellow", label: "Amarillo" },
+    { id: "green", label: "Verde" },
+    { id: "blue", label: "Azul" },
+    { id: "pink", label: "Rosa" },
+    { id: "orange", label: "Naranja" },
+    { id: "purple", label: "Morado" },
+    { id: "teal", label: "Turquesa" },
+    { id: "gray", label: "Gris" }
   ] as const;
 
   const MENU_ROOT = "persistent-highlighter";
@@ -15,7 +18,7 @@ namespace PersistentHighlighterBackground {
     chrome.contextMenus.removeAll(() => {
       chrome.contextMenus.create({
         id: MENU_ROOT,
-        title: "Persistent Highlighter",
+        title: "Resaltador persistente",
         contexts: ["selection", "page"]
       });
 
@@ -23,7 +26,7 @@ namespace PersistentHighlighterBackground {
         chrome.contextMenus.create({
           id: `${MENU_ROOT}:highlight:${color.id}`,
           parentId: MENU_ROOT,
-          title: `Highlight in ${color.label}`,
+          title: `Resaltar en ${color.label}`,
           contexts: ["selection"]
         });
       }
@@ -31,7 +34,7 @@ namespace PersistentHighlighterBackground {
       chrome.contextMenus.create({
         id: `${MENU_ROOT}:clear`,
         parentId: MENU_ROOT,
-        title: "Clear highlights on this page",
+        title: "Limpiar resaltados de esta página",
         contexts: ["page"]
       });
     });

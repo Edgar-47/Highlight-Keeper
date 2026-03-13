@@ -8,11 +8,14 @@
   namespace.DYNAMIC_RESTORE_DELAY_MS = 700;
   namespace.DEFAULT_COLOR = "yellow";
   namespace.COLOR_OPTIONS = [
-    { id: "yellow", label: "Sun" },
-    { id: "green", label: "Mint" },
-    { id: "blue", label: "Sky" },
-    { id: "pink", label: "Rose" },
-    { id: "orange", label: "Amber" }
+    { id: "yellow", label: "Amarillo" },
+    { id: "green", label: "Verde" },
+    { id: "blue", label: "Azul" },
+    { id: "pink", label: "Rosa" },
+    { id: "orange", label: "Naranja" },
+    { id: "purple", label: "Morado" },
+    { id: "teal", label: "Turquesa" },
+    { id: "gray", label: "Gris" }
   ];
 
   namespace.normalizeUrl = function normalizeUrl(rawUrl) {

@@ -76,6 +76,16 @@
     });
   };
 
+  HighlightStorage.prototype.findMatchingHighlight = function findMatchingHighlight(existingRecords, candidate) {
+    return existingRecords.find(function findMatch(record) {
+      return (
+        record.signature === candidate.signature &&
+        namespace.normalizeText(record.selectedText).toLowerCase() ===
+          namespace.normalizeText(candidate.selectedText).toLowerCase()
+      );
+    });
+  };
+
   HighlightStorage.prototype.getRecordsByUrl = async function getRecordsByUrl() {
     const items = await this.getFromStorage([namespace.STORAGE_KEY]);
     return items[namespace.STORAGE_KEY] || {};

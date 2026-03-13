@@ -62,6 +62,14 @@ namespace PersistentHighlighter {
       );
     }
 
+    findMatchingHighlight(existingRecords: HighlightRecord[], candidate: HighlightRecord): HighlightRecord | undefined {
+      return existingRecords.find(
+        (record) =>
+          record.signature === candidate.signature &&
+          normalizeText(record.selectedText).toLowerCase() === normalizeText(candidate.selectedText).toLowerCase()
+      );
+    }
+
     private async getRecordsByUrl(): Promise<RecordsByUrl> {
       const items = await this.getFromStorage<{ [STORAGE_KEY]?: RecordsByUrl }>([STORAGE_KEY]);
       return items[STORAGE_KEY] || {};

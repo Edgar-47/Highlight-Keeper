@@ -1,5 +1,13 @@
 namespace PersistentHighlighter {
-  export type HighlightColor = "yellow" | "green" | "blue" | "pink" | "orange";
+  export type HighlightColor =
+    | "yellow"
+    | "green"
+    | "blue"
+    | "pink"
+    | "orange"
+    | "purple"
+    | "teal"
+    | "gray";
 
   export interface HighlightRecord {
     id: string;
@@ -47,11 +55,14 @@ namespace PersistentHighlighter {
   export const DYNAMIC_RESTORE_DELAY_MS = 700;
   export const DEFAULT_COLOR: HighlightColor = "yellow";
   export const COLOR_OPTIONS: Array<{ id: HighlightColor; label: string }> = [
-    { id: "yellow", label: "Sun" },
-    { id: "green", label: "Mint" },
-    { id: "blue", label: "Sky" },
-    { id: "pink", label: "Rose" },
-    { id: "orange", label: "Amber" }
+    { id: "yellow", label: "Amarillo" },
+    { id: "green", label: "Verde" },
+    { id: "blue", label: "Azul" },
+    { id: "pink", label: "Rosa" },
+    { id: "orange", label: "Naranja" },
+    { id: "purple", label: "Morado" },
+    { id: "teal", label: "Turquesa" },
+    { id: "gray", label: "Gris" }
   ];
 
   export function normalizeUrl(rawUrl: string): string {

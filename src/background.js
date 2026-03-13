@@ -1,10 +1,13 @@
 (function bootstrapBackground() {
   const colorOptions = [
-    { id: "yellow", label: "Yellow" },
-    { id: "green", label: "Green" },
-    { id: "blue", label: "Blue" },
-    { id: "pink", label: "Pink" },
-    { id: "orange", label: "Orange" }
+    { id: "yellow", label: "Amarillo" },
+    { id: "green", label: "Verde" },
+    { id: "blue", label: "Azul" },
+    { id: "pink", label: "Rosa" },
+    { id: "orange", label: "Naranja" },
+    { id: "purple", label: "Morado" },
+    { id: "teal", label: "Turquesa" },
+    { id: "gray", label: "Gris" }
   ];
   const menuRoot = "persistent-highlighter";
 
@@ -12,7 +15,7 @@
     chrome.contextMenus.removeAll(function onRemoved() {
       chrome.contextMenus.create({
         id: menuRoot,
-        title: "Persistent Highlighter",
+        title: "Resaltador persistente",
         contexts: ["selection", "page"]
       });
 
@@ -20,7 +23,7 @@
         chrome.contextMenus.create({
           id: menuRoot + ":highlight:" + color.id,
           parentId: menuRoot,
-          title: "Highlight in " + color.label,
+          title: "Resaltar en " + color.label,
           contexts: ["selection"]
         });
       });
@@ -28,7 +31,7 @@
       chrome.contextMenus.create({
         id: menuRoot + ":clear",
         parentId: menuRoot,
-        title: "Clear highlights on this page",
+        title: "Limpiar resaltados de esta página",
         contexts: ["page"]
       });
     });

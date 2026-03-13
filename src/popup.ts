@@ -21,7 +21,7 @@ namespace PersistentHighlighterPopup {
     return new Promise<PersistentHighlighter.ExtensionResponse<PersistentHighlighter.HighlightOperationResult>>(
       (resolve, reject) => {
         if (!currentTab?.id) {
-          reject(new Error("No active tab available."));
+          reject(new Error("No hay una pestaña activa disponible."));
           return;
         }
 
@@ -66,7 +66,7 @@ namespace PersistentHighlighterPopup {
 
   async function ensureActiveTabReady(): Promise<void> {
     if (!currentTab?.id) {
-      throw new Error("No active tab available.");
+      throw new Error("No hay una pestaña activa disponible.");
     }
 
     try {
@@ -79,10 +79,33 @@ namespace PersistentHighlighterPopup {
   function getElement<T extends HTMLElement>(id: string): T {
     const element = document.getElementById(id) as T | null;
     if (!element) {
-      throw new Error(`Missing popup element: ${id}`);
+      throw new Error(`Falta un elemento de la interfaz: ${id}`);
     }
 
     return element;
+  }
+
+  function renderColorOptions(selectedColor: PersistentHighlighter.HighlightColor): void {
+    const container = getElement<HTMLDivElement>("color-options");
+    container.innerHTML = "";
+
+    for (const color of PersistentHighlighter.COLOR_OPTIONS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.color = color.id;
+      button.className = `color-option ${button.dataset.color === selectedColor ? "is-active" : ""}`;
+      button.innerHTML = `
+        <span class="color-option__swatch color-option--${color.id}"></span>
+        <span class="color-option__label">${color.label}</span>
+      `;
+
+      button.addEventListener("click", async () => {
+        await storage.saveSettings({ selectedColor: color.id });
+        renderColorOptions(color.id);
+      });
+
+      container.appendChild(button);
+    }
   }
 
   async function refresh(): Promise<void> {
@@ -92,10 +115,10 @@ namespace PersistentHighlighterPopup {
     const pageUrl = getElement<HTMLParagraphElement>("page-url");
 
     if (!currentTab) {
-      status.textContent = "Open a regular webpage to use highlighting.";
+      status.textContent = "Abre una web normal para usar el resaltado.";
       list.innerHTML = "";
       count.textContent = "0";
-      pageUrl.textContent = "Unsupported page";
+      pageUrl.textContent = "Página no compatible";
       return;
     }
 
@@ -104,8 +127,8 @@ namespace PersistentHighlighterPopup {
     pageUrl.textContent = currentTab.url;
 
     if (!highlights.length) {
-      list.innerHTML = '<p class="empty-state">No saved highlights for this page yet.</p>';
-      status.textContent = "Ready.";
+      list.innerHTML = '<p class="empty-state">Todavía no hay resaltados guardados en esta página.</p>';
+      status.textContent = "Listo.";
       return;
     }
 
@@ -121,7 +144,7 @@ namespace PersistentHighlighterPopup {
             <p class="highlight-row__subtext">${new Date(record.createdAt).toLocaleString()}</p>
           </div>
         </div>
-        <button class="text-button" data-highlight-id="${record.id}" type="button">Delete</button>
+        <button class="text-button" data-highlight-id="${record.id}" type="button">Borrar</button>
       `;
 
       row.querySelector("button")?.addEventListener("click", async () => {
@@ -138,7 +161,7 @@ namespace PersistentHighlighterPopup {
       list.appendChild(row);
     }
 
-    status.textContent = "Ready.";
+    status.textContent = "Listo.";
   }
 
   function escapeHtml(value: string): string {
@@ -152,13 +175,13 @@ namespace PersistentHighlighterPopup {
 
   async function runAction(action: () => Promise<void>): Promise<void> {
     const status = getElement<HTMLParagraphElement>("status");
-    status.textContent = "Working...";
+    status.textContent = "Trabajando...";
 
     try {
       await action();
       await refresh();
     } catch (error) {
-      status.textContent = error instanceof Error ? error.message : "Something went wrong.";
+      status.textContent = error instanceof Error ? error.message : "Ha ocurrido un error.";
     }
   }
 
@@ -169,17 +192,7 @@ namespace PersistentHighlighterPopup {
     }
 
     const settings = await storage.getSettings();
-    const colorButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-color]"));
-    for (const button of colorButtons) {
-      button.classList.toggle("is-active", button.dataset.color === settings.selectedColor);
-      button.addEventListener("click", async () => {
-        const color = button.dataset.color as PersistentHighlighter.HighlightColor;
-        await storage.saveSettings({ selectedColor: color });
-        for (const target of colorButtons) {
-          target.classList.toggle("is-active", target === button);
-        }
-      });
-    }
+    renderColorOptions(settings.selectedColor);
 
     getElement<HTMLButtonElement>("highlight-selection").addEventListener("click", async () => {
       const nextSettings = await storage.getSettings();
@@ -191,7 +204,17 @@ namespace PersistentHighlighterPopup {
         });
 
         if (!response?.ok) {
-          throw new Error(response?.error || "Unable to apply highlight.");
+          throw new Error(response?.error || "No se pudo aplicar el resaltado.");
+        }
+      });
+    });
+
+    getElement<HTMLButtonElement>("restore-page").addEventListener("click", async () => {
+      await runAction(async () => {
+        await ensureActiveTabReady();
+        const response = await sendMessageToActiveTab({ type: "RESTORE_HIGHLIGHTS" });
+        if (!response?.ok) {
+          throw new Error(response?.error || "No se pudieron reaplicar los resaltados.");
         }
       });
     });
@@ -199,7 +222,7 @@ namespace PersistentHighlighterPopup {
     getElement<HTMLButtonElement>("clear-page").addEventListener("click", async () => {
       await runAction(async () => {
         if (!currentTab) {
-          throw new Error("No active tab available.");
+          throw new Error("No hay una pestaña activa disponible.");
         }
 
         await storage.clearHighlights(currentTab.url);
@@ -207,7 +230,7 @@ namespace PersistentHighlighterPopup {
           await ensureActiveTabReady();
           const response = await sendMessageToActiveTab({ type: "CLEAR_HIGHLIGHTS" });
           if (!response?.ok) {
-            throw new Error(response?.error || "Unable to clear page highlights.");
+            throw new Error(response?.error || "No se pudieron limpiar los resaltados.");
           }
         } catch (_error) {
           // Storage was already updated. Ignore page messaging failures here.
@@ -225,7 +248,7 @@ namespace PersistentHighlighterPopup {
   void bootstrap().catch((error) => {
     const status = document.getElementById("status");
     if (status) {
-      status.textContent = error instanceof Error ? error.message : "Popup failed to load.";
+      status.textContent = error instanceof Error ? error.message : "La ventana no se pudo cargar.";
     }
   });
 }

@@ -14,7 +14,7 @@
   function sendMessageToActiveTab(message) {
     return new Promise(function send(resolve, reject) {
       if (!currentTab || !currentTab.id) {
-        reject(new Error("No active tab available."));
+        reject(new Error("No hay una pestaña activa disponible."));
         return;
       }
 
@@ -58,7 +58,7 @@
 
   async function ensureActiveTabReady() {
     if (!currentTab || !currentTab.id) {
-      throw new Error("No active tab available.");
+      throw new Error("No hay una pestaña activa disponible.");
     }
 
     try {
@@ -71,10 +71,36 @@
   function getElement(id) {
     const element = document.getElementById(id);
     if (!element) {
-      throw new Error("Missing popup element: " + id);
+      throw new Error("Falta un elemento de la interfaz: " + id);
     }
 
     return element;
+  }
+
+  function renderColorOptions(selectedColor) {
+    const container = getElement("color-options");
+    container.innerHTML = "";
+
+    namespace.COLOR_OPTIONS.forEach(function renderColor(color) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.color = color.id;
+      button.className = "color-option" + (color.id === selectedColor ? " is-active" : "");
+      button.innerHTML =
+        '<span class="color-option__swatch color-option--' +
+        color.id +
+        '"></span>' +
+        '<span class="color-option__label">' +
+        color.label +
+        "</span>";
+
+      button.addEventListener("click", async function onColorClick() {
+        await storage.saveSettings({ selectedColor: color.id });
+        renderColorOptions(color.id);
+      });
+
+      container.appendChild(button);
+    });
   }
 
   function escapeHtml(value) {
@@ -93,10 +119,10 @@
     const pageUrl = getElement("page-url");
 
     if (!currentTab) {
-      status.textContent = "Open a regular webpage to use highlighting.";
+      status.textContent = "Abre una web normal para usar el resaltado.";
       list.innerHTML = "";
       count.textContent = "0";
-      pageUrl.textContent = "Unsupported page";
+      pageUrl.textContent = "Página no compatible";
       return;
     }
 
@@ -105,8 +131,8 @@
     pageUrl.textContent = currentTab.url;
 
     if (!highlights.length) {
-      list.innerHTML = '<p class="empty-state">No saved highlights for this page yet.</p>';
-      status.textContent = "Ready.";
+      list.innerHTML = '<p class="empty-state">Todavía no hay resaltados guardados en esta página.</p>';
+      status.textContent = "Listo.";
       return;
     }
 
@@ -130,7 +156,7 @@
         "</div>" +
         '<button class="text-button" data-highlight-id="' +
         record.id +
-        '" type="button">Delete</button>';
+        '" type="button">Borrar</button>';
 
       row.querySelector("button").addEventListener("click", async function onDelete() {
         await runAction(async function removeHighlight() {
@@ -146,18 +172,18 @@
       list.appendChild(row);
     });
 
-    status.textContent = "Ready.";
+    status.textContent = "Listo.";
   }
 
   async function runAction(action) {
     const status = getElement("status");
-    status.textContent = "Working...";
+    status.textContent = "Trabajando...";
 
     try {
       await action();
       await refresh();
     } catch (error) {
-      status.textContent = error instanceof Error ? error.message : "Something went wrong.";
+      status.textContent = error instanceof Error ? error.message : "Ha ocurrido un error.";
     }
   }
 
@@ -168,16 +194,7 @@
     }
 
     const settings = await storage.getSettings();
-    const colorButtons = Array.from(document.querySelectorAll("[data-color]"));
-    colorButtons.forEach(function wireColor(button) {
-      button.classList.toggle("is-active", button.dataset.color === settings.selectedColor);
-      button.addEventListener("click", async function onClick() {
-        await storage.saveSettings({ selectedColor: button.dataset.color });
-        colorButtons.forEach(function syncState(target) {
-          target.classList.toggle("is-active", target === button);
-        });
-      });
-    });
+    renderColorOptions(settings.selectedColor);
 
     getElement("highlight-selection").addEventListener("click", async function onHighlight() {
       const nextSettings = await storage.getSettings();
@@ -189,7 +206,17 @@
         });
 
         if (!response || !response.ok) {
-          throw new Error((response && response.error) || "Unable to apply highlight.");
+          throw new Error((response && response.error) || "No se pudo aplicar el resaltado.");
+        }
+      });
+    });
+
+    getElement("restore-page").addEventListener("click", async function onRestore() {
+      await runAction(async function restorePage() {
+        await ensureActiveTabReady();
+        const response = await sendMessageToActiveTab({ type: "RESTORE_HIGHLIGHTS" });
+        if (!response || !response.ok) {
+          throw new Error((response && response.error) || "No se pudieron reaplicar los resaltados.");
         }
       });
     });
@@ -197,7 +224,7 @@
     getElement("clear-page").addEventListener("click", async function onClear() {
       await runAction(async function clearPage() {
         if (!currentTab) {
-          throw new Error("No active tab available.");
+          throw new Error("No hay una pestaña activa disponible.");
         }
 
         await storage.clearHighlights(currentTab.url);
@@ -205,7 +232,7 @@
           await ensureActiveTabReady();
           const response = await sendMessageToActiveTab({ type: "CLEAR_HIGHLIGHTS" });
           if (!response || !response.ok) {
-            throw new Error((response && response.error) || "Unable to clear page highlights.");
+            throw new Error((response && response.error) || "No se pudieron limpiar los resaltados.");
           }
         } catch (_error) {
           // Storage was already updated.
@@ -223,7 +250,7 @@
   void bootstrap().catch(function onError(error) {
     const status = document.getElementById("status");
     if (status) {
-      status.textContent = error instanceof Error ? error.message : "Popup failed to load.";
+      status.textContent = error instanceof Error ? error.message : "La ventana no se pudo cargar.";
     }
   });
 })(globalThis);
