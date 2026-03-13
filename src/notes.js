@@ -119,30 +119,41 @@
     noteElement.className = "ph-note ph-note--" + note.color;
     noteElement.dataset.noteId = note.id;
     noteElement.dataset.createdAt = note.createdAt;
-    noteElement.innerHTML =
-      '<header class="ph-note__header">' +
-      '<div class="ph-note__header-main">' +
-      '<span class="ph-note__drag" aria-hidden="true">Mover</span>' +
-      '<input class="ph-note__title" type="text" value="" aria-label="Nombre de la nota" placeholder="Titulo de la nota" />' +
-      "</div>" +
-      '<div class="ph-note__actions">' +
-      '<button class="ph-note__icon-button" data-action="minimize" type="button" aria-label="Minimizar">_</button>' +
-      '<button class="ph-note__icon-button" data-action="delete" type="button" aria-label="Eliminar">x</button>' +
-      "</div>" +
-      "</header>" +
-      '<div class="ph-note__palette"></div>' +
-      '<label class="ph-note__body">' +
-      '<textarea class="ph-note__textarea" placeholder="Escribe tu nota..."></textarea>' +
-      "</label>";
+    // Almacena el color personalizado si lo hay
+    if (note.customColor) {
+      noteElement.dataset.customColor = note.customColor;
+      noteElement.style.setProperty("--ph-note-custom-bg", note.customColor);
+    }
 
+    noteElement.innerHTML =
+      // Título flotante ENCIMA de la nota (fuera del flujo del cuerpo)
+      '<div class="ph-note__title-wrap">' +
+      '<input class="ph-note__title" type="text" value="" aria-label="Título de la nota" placeholder="Sin título" maxlength="60" />' +
+      '</div>' +
+      // Barra de arrastre compacta con solo botones
+      '<header class="ph-note__header">' +
+      '<span class="ph-note__drag-dots" aria-hidden="true">⠿</span>' +
+      '<div class="ph-note__actions">' +
+      '<button class="ph-note__icon-button" data-action="minimize" type="button" aria-label="Minimizar">—</button>' +
+      '<button class="ph-note__icon-button" data-action="delete" type="button" aria-label="Eliminar">✕</button>' +
+      '</div>' +
+      '</header>' +
+      // Paleta de colores + rueda personalizada
+      '<div class="ph-note__palette"></div>' +
+      // Cuerpo con textarea
+      '<label class="ph-note__body">' +
+      '<textarea class="ph-note__textarea" placeholder="Escribe tu nota…"></textarea>' +
+      '</label>';
+
+    // ── Título (encima de la nota) ──────────────────────────────────────────
     const titleInput = noteElement.querySelector(".ph-note__title");
     if (titleInput) {
-      titleInput.value = note.title;
+      titleInput.value = note.title === "Nueva nota" ? "" : (note.title || "");
       titleInput.addEventListener(
         "input",
         function onTitleInput() {
           const nextNote = Object.assign({}, this.readNoteFromElement(noteElement, note.id), {
-            title: titleInput.value,
+            title: titleInput.value || "Nueva nota",
             updatedAt: new Date().toISOString()
           });
           this.scheduleSave(nextNote);
@@ -150,7 +161,10 @@
       );
     }
 
+    // ── Paleta de colores + rueda personalizada ─────────────────────────────
     const palette = noteElement.querySelector(".ph-note__palette");
+
+    // Colores predefinidos
     namespace.NOTE_COLOR_OPTIONS.forEach(
       function eachColor(option) {
         const colorButton = document.createElement("button");
@@ -161,19 +175,55 @@
         colorButton.addEventListener(
           "click",
           function onColorClick() {
+            // Quitar color personalizado si había
+            noteElement.dataset.customColor = "";
+            noteElement.style.removeProperty("--ph-note-custom-bg");
             const nextNote = Object.assign({}, this.readNoteFromElement(noteElement, note.id), {
               color: option.id,
+              customColor: undefined,
               updatedAt: new Date().toISOString()
             });
             this.applyNoteLayout(noteElement, nextNote);
             this.scheduleSave(nextNote);
           }.bind(this)
         );
-        if (palette) {
-          palette.appendChild(colorButton);
-        }
+        if (palette) palette.appendChild(colorButton);
       }.bind(this)
     );
+
+    // Separador visual
+    const sep = document.createElement("span");
+    sep.className = "ph-note__palette-sep";
+    sep.setAttribute("aria-hidden", "true");
+    if (palette) palette.appendChild(sep);
+
+    // Rueda de color personalizado
+    const colorWheel = document.createElement("input");
+    colorWheel.type = "color";
+    colorWheel.className = "ph-note__color-wheel";
+    colorWheel.title = "Color personalizado";
+    colorWheel.value = note.customColor || "#facc15";
+    colorWheel.addEventListener(
+      "input",
+      function onWheelChange() {
+        const hex = colorWheel.value;
+        noteElement.dataset.customColor = hex;
+        noteElement.style.setProperty("--ph-note-custom-bg", hex);
+        // Aplicar clase custom y quitar las predefinidas
+        namespace.NOTE_COLOR_OPTIONS.forEach(function(o) {
+          noteElement.classList.remove("ph-note--" + o.id);
+        });
+        noteElement.classList.remove("ph-note--custom");
+        noteElement.classList.add("ph-note--custom");
+        const nextNote = Object.assign({}, this.readNoteFromElement(noteElement, note.id), {
+          color: "custom",
+          customColor: hex,
+          updatedAt: new Date().toISOString()
+        });
+        this.scheduleSave(nextNote);
+      }.bind(this)
+    );
+    if (palette) palette.appendChild(colorWheel);
 
     const textarea = noteElement.querySelector(".ph-note__textarea");
     if (textarea) {
@@ -259,7 +309,13 @@
 
     container.appendChild(noteElement);
     this.noteElements.set(note.id, noteElement);
+    // applyNoteLayout gestiona el color (incluido personalizado) y la posición
     this.applyNoteLayout(noteElement, note);
+    // Sincronizar el valor de la rueda si hay color personalizado
+    if (note.color === "custom" && note.customColor) {
+      const wheel = noteElement.querySelector(".ph-note__color-wheel");
+      if (wheel) wheel.value = note.customColor;
+    }
     this.observeNoteResize(noteElement, note.id);
   };
 
@@ -294,7 +350,7 @@
     noteElement.style.left = clampedNote.x + "px";
     noteElement.style.top = clampedNote.y + "px";
     noteElement.style.width = clampedNote.width + "px";
-    noteElement.style.height = (clampedNote.isMinimized ? 60 : clampedNote.height) + "px";
+    noteElement.style.height = (clampedNote.isMinimized ? 44 : clampedNote.height) + "px";
     noteElement.dataset.x = String(clampedNote.x);
     noteElement.dataset.y = String(clampedNote.y);
     noteElement.dataset.width = String(clampedNote.width);
@@ -304,21 +360,38 @@
     noteElement.dataset.favorite  = String(Boolean(clampedNote.isFavorite));
     noteElement.classList.toggle("is-minimized", clampedNote.isMinimized);
 
-    namespace.NOTE_COLOR_OPTIONS.forEach(function eachColor(option) {
+    // Gestión de color: predefinido o personalizado
+    namespace.NOTE_COLOR_OPTIONS.forEach(function(option) {
       noteElement.classList.remove("ph-note--" + option.id);
     });
-    noteElement.classList.add("ph-note--" + clampedNote.color);
+    noteElement.classList.remove("ph-note--custom");
+
+    if (clampedNote.color === "custom" && clampedNote.customColor) {
+      noteElement.classList.add("ph-note--custom");
+      noteElement.style.setProperty("--ph-note-custom-bg", clampedNote.customColor);
+      noteElement.dataset.customColor = clampedNote.customColor;
+      // Actualizar la rueda si existe
+      const wheel = noteElement.querySelector(".ph-note__color-wheel");
+      if (wheel) wheel.value = clampedNote.customColor;
+    } else {
+      noteElement.style.removeProperty("--ph-note-custom-bg");
+      noteElement.dataset.customColor = "";
+      noteElement.classList.add("ph-note--" + clampedNote.color);
+    }
   };
 
   NotesBoard.prototype.readNoteFromElement = function readNoteFromElement(noteElement, noteId) {
     const titleInput = noteElement.querySelector(".ph-note__title");
     const textarea = noteElement.querySelector(".ph-note__textarea");
+    const rawColor = noteElement.dataset.color || "yellow";
+    const customColor = noteElement.dataset.customColor || undefined;
     return this.normalizeNote({
       id: noteId,
       url: namespace.normalizeUrl(window.location.href),
-      title: titleInput ? titleInput.value : "Nueva nota",
+      title: titleInput ? (titleInput.value || "Nueva nota") : "Nueva nota",
       text: textarea ? textarea.value : "",
-      color: noteElement.dataset.color || "yellow",
+      color: rawColor,
+      customColor: customColor || undefined,
       x: Number(noteElement.dataset.x || window.scrollX + 32),
       y: Number(noteElement.dataset.y || window.scrollY + 72),
       width: Number(noteElement.dataset.width || noteElement.offsetWidth || 280),
@@ -364,6 +437,8 @@
     return Object.assign({}, note, {
       title: note.title && String(note.title).trim() ? String(note.title).trim() : "Nueva nota",
       text: note.text || "",
+      color: note.color || "yellow",
+      customColor: note.customColor || undefined,
       width: Number.isFinite(note.width) ? note.width : 280,
       height: Number.isFinite(note.height) ? note.height : 230,
       x: Number.isFinite(note.x) ? note.x : window.scrollX + 40,
