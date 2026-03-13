@@ -22,15 +22,15 @@
   --radius-lg:    20px;
   --font:         -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
   /* Highlight colors */
-  --c-yellow:  #facc15;
-  --c-green:   #22c55e;
-  --c-blue:    #3b82f6;
-  --c-pink:    #ec4899;
-  --c-orange:  #f97316;
-  --c-purple:  #a855f7;
-  --c-teal:    #14b8a6;
-  --c-red:     #ef4444;
-  --c-gray:    #9ca3af;
+  --c-yellow:  #fde047;
+  --c-green:   #4ade80;
+  --c-blue:    #60a5fa;
+  --c-pink:    #f472b6;
+  --c-orange:  #fb923c;
+  --c-purple:  #c084fc;
+  --c-teal:    #2dd4bf;
+  --c-red:     #f87171;
+  --c-gray:    #94a3b8;
   /* Note bg colors */
   --n-yellow: #fef9c3;
   --n-pink:   #fce7f3;
@@ -348,12 +348,12 @@ body.popup-shell {
 .note-swatch:hover { transform: scale(1.15); }
 .note-swatch.is-active { border-color: var(--ink); }
 
-.note-swatch--yellow { background: var(--n-yellow); }
-.note-swatch--pink   { background: var(--n-pink);   }
-.note-swatch--blue   { background: var(--n-blue);   }
-.note-swatch--green  { background: var(--n-green);  }
-.note-swatch--orange { background: var(--n-orange); }
-.note-swatch--purple { background: var(--n-purple); }
+.note-swatch--yellow { background: #fde047; }
+.note-swatch--pink   { background: #f472b6; }
+.note-swatch--blue   { background: #60a5fa; }
+.note-swatch--green  { background: #4ade80; }
+.note-swatch--orange { background: #fb923c; }
+.note-swatch--purple { background: #c084fc; }
 
 /* ── Action rows ────────────────────────────────────────────────────────── */
 .action-row {

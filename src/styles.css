@@ -1,259 +1,288 @@
-/* ── Annotate — Content Script Styles ──────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Annotate — Content Script Styles
+   Inyectado en todas las páginas. No afecta al popup.
+═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --ph-yellow:  #facc15;
-  --ph-green:   #bbf7d0;
-  --ph-blue:    #bfdbfe;
-  --ph-pink:    #fbcfe8;
-  --ph-orange:  #fed7aa;
-  --ph-purple:  #ddd6fe;
-  --ph-teal:    #99f6e4;
-  --ph-red:     #fca5a5;
-  --ph-gray:    #d4d4d8;
+  --ph-yellow:  #fde047;
+  --ph-green:   #4ade80;
+  --ph-blue:    #60a5fa;
+  --ph-pink:    #f472b6;
+  --ph-orange:  #fb923c;
+  --ph-purple:  #c084fc;
+  --ph-teal:    #2dd4bf;
+  --ph-red:     #f87171;
+  --ph-gray:    #94a3b8;
 }
 
-/* ── Highlight marks ────────────────────────────────────────────────────── */
+/* ── Resaltados de texto ────────────────────────────────────────────────── */
 .ph-highlight {
   color: inherit !important;
-  padding: 0.07em 0.05em;
-  border-radius: 0.2em;
+  padding: 0.06em 0.08em;
+  border-radius: 0.18em;
   cursor: text;
-  transition: outline 120ms ease;
+  transition: outline 100ms ease;
 }
-
 .ph-highlight:hover {
-  outline: 2px solid rgba(31, 29, 26, 0.25);
+  outline: 2px solid rgba(0,0,0,0.3);
   outline-offset: 1px;
 }
 
-.ph-highlight--yellow  { background: var(--ph-yellow);  box-shadow: inset 0 -2px 0 rgba(133,77,14,0.22); }
-.ph-highlight--green   { background: var(--ph-green);   }
-.ph-highlight--blue    { background: var(--ph-blue);    }
-.ph-highlight--pink    { background: var(--ph-pink);    }
-.ph-highlight--orange  { background: var(--ph-orange);  }
-.ph-highlight--purple  { background: var(--ph-purple);  }
-.ph-highlight--teal    { background: var(--ph-teal);    }
-.ph-highlight--red     { background: var(--ph-red);     }
-.ph-highlight--gray    { background: var(--ph-gray);    }
-.ph-highlight--custom  { background: var(--ph-custom-highlight, var(--ph-yellow)); }
+.ph-highlight--yellow { background: #fde047; }
+.ph-highlight--green  { background: #4ade80; }
+.ph-highlight--blue   { background: #60a5fa; }
+.ph-highlight--pink   { background: #f472b6; }
+.ph-highlight--orange { background: #fb923c; }
+.ph-highlight--purple { background: #c084fc; }
+.ph-highlight--teal   { background: #2dd4bf; }
+.ph-highlight--red    { background: #f87171; }
+.ph-highlight--gray   { background: #94a3b8; }
+.ph-highlight--custom { background: var(--ph-custom-highlight, #fde047); }
 
-/* ── Notes layer ────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   POST-IT NOTES
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Capa contenedora */
 .ph-note-layer {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   z-index: 2147483000;
   pointer-events: none;
 }
 
-/* ── Título flotante ENCIMA de la nota ──────────────────────────────────── */
-.ph-note__title-wrap {
-  position: absolute;
-  top: -28px;
-  left: 0;
-  right: 0;
-  display: flex;
-  pointer-events: auto;
-}
-
-.ph-note__title {
-  width: 100%;
-  border: 0;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font: 600 12px/1 -apple-system, "Segoe UI", sans-serif;
-  padding: 5px 10px;
-  border-radius: 8px 8px 0 0;
-  outline: none;
-  letter-spacing: 0.01em;
-  backdrop-filter: blur(4px);
-  transition: background 150ms;
-}
-
-.ph-note__title:focus {
-  background: rgba(0, 0, 0, 0.72);
-}
-
-.ph-note__title::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-  font-weight: 400;
-}
-
-/* ── Post-it card ───────────────────────────────────────────────────────── */
+/* ── La nota ────────────────────────────────────────────────────────────── */
 .ph-note {
   position: absolute;
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  min-width: 230px;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
   min-height: 150px;
-  border-radius: 4px 16px 16px 16px;
+  border-radius: 3px 14px 14px 14px;
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.12),
-    0 8px 24px rgba(0, 0, 0, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 1px 3px rgba(0,0,0,0.18),
+    0 6px 20px rgba(0,0,0,0.14),
+    0 1px 0 rgba(255,255,255,0.6) inset;
   pointer-events: auto;
   resize: both;
   overflow: hidden;
-  transition:
-    transform 160ms cubic-bezier(.22, .68, 0, 1.2),
-    opacity 160ms ease,
-    box-shadow 200ms ease;
-  font-family: -apple-system, "Segoe UI", sans-serif;
-  /* margen superior para que quepa el título flotante */
-  margin-top: 28px;
+  font-family: -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  transition: box-shadow 180ms ease, opacity 180ms ease, transform 180ms cubic-bezier(.22,.68,0,1.2);
+  /* Colores — se sobreescribe con la clase o con --ph-note-bg */
 }
 
 .ph-note:hover {
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    0 16px 40px rgba(0, 0, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    0 2px 6px rgba(0,0,0,0.2),
+    0 12px 32px rgba(0,0,0,0.18),
+    0 1px 0 rgba(255,255,255,0.65) inset;
   z-index: 2147483001;
 }
 
-.ph-note.is-removing {
-  opacity: 0;
-  transform: scale(0.9) translateY(8px);
+/* Animación de entrada */
+.ph-note {
+  animation: ph-note-in 200ms cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes ph-note-in {
+  from { opacity:0; transform: scale(0.88) translateY(10px); }
+  to   { opacity:1; transform: scale(1)    translateY(0);    }
+}
+
+/* Eliminando */
+.ph-note--removing {
+  opacity: 0 !important;
+  transform: scale(0.88) translateY(8px) !important;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease !important;
+}
+
+/* Minimizado — solo muestra la barra */
+.ph-note--minimized { overflow: hidden; resize: horizontal; }
+.ph-note--minimized .ph-note__colors,
+.ph-note--minimized .ph-note__body { display: none; }
+
+/* Arrastando */
+.ph-note--dragging {
+  box-shadow: 0 16px 48px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.2);
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+/* ── Colores predefinidos — saturados para que se vean en fondos claros ── */
+.ph-note--yellow { background: #fef08a; }   /* amarillo intenso */
+.ph-note--pink   { background: #f9a8d4; }   /* rosa fuerte      */
+.ph-note--blue   { background: #93c5fd; }   /* azul cielo       */
+.ph-note--green  { background: #86efac; }   /* verde menta      */
+.ph-note--orange { background: #fdba74; }   /* naranja cálido   */
+.ph-note--purple { background: #d8b4fe; }   /* lila             */
+.ph-note--custom { background: var(--ph-note-bg, #fef08a); }
+
+/* ── Barra superior (drag + título + botones) ───────────────────────────── */
+.ph-note__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 38px;
+  min-height: 38px;
+  flex-shrink: 0;
+  cursor: grab;
+  background: rgba(0,0,0,0.08);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  user-select: none;
+}
+
+.ph-note__bar:active { cursor: grabbing; }
+
+/* Icono de puntos de agarre */
+.ph-note__grip {
+  font-size: 13px;
+  line-height: 1;
+  color: rgba(0,0,0,0.35);
+  letter-spacing: -2px;
+  flex-shrink: 0;
   pointer-events: none;
 }
 
-.ph-note.is-minimized .ph-note__palette,
-.ph-note.is-minimized .ph-note__body { display: none; }
-
-/* ── Colores predefinidos ───────────────────────────────────────────────── */
-.ph-note--yellow { background: #fef9c3; }
-.ph-note--pink   { background: #fce7f3; }
-.ph-note--blue   { background: #dbeafe; }
-.ph-note--green  { background: #dcfce7; }
-.ph-note--orange { background: #ffedd5; }
-.ph-note--purple { background: #ede9fe; }
-.ph-note--custom { background: var(--ph-note-custom-bg, #facc15); }
-
-/* Swatches en paleta */
-.note-color-option--yellow, .ph-note__swatch--yellow { background: #fef9c3; }
-.note-color-option--pink,   .ph-note__swatch--pink   { background: #fce7f3; }
-.note-color-option--blue,   .ph-note__swatch--blue   { background: #dbeafe; }
-.note-color-option--green,  .ph-note__swatch--green  { background: #dcfce7; }
-.note-color-option--orange, .ph-note__swatch--orange { background: #ffedd5; }
-.note-color-option--purple, .ph-note__swatch--purple { background: #ede9fe; }
-
-/* ── Header de arrastre (compacto) ──────────────────────────────────────── */
-.ph-note__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 8px 4px;
-  cursor: grab;
-  user-select: none;
-  background: rgba(0, 0, 0, 0.06);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-}
-
-.ph-note__header:active { cursor: grabbing; }
-
-.ph-note__drag-dots {
-  font-size: 14px;
-  color: rgba(31, 29, 26, 0.35);
-  line-height: 1;
-  letter-spacing: -1px;
+/* Input de título — ocupa el espacio central */
+.ph-note__title {
   flex: 1;
+  min-width: 0;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.45);
+  color: rgba(0,0,0,0.8);
+  font: 600 12px/1 inherit;
+  padding: 0 8px;
+  outline: none;
+  transition: background 150ms;
+  /* No bloquea el drag cuando se hace click en zona vacía */
+  pointer-events: auto;
 }
 
-.ph-note__actions { display: flex; gap: 4px; }
+.ph-note__title:focus {
+  background: rgba(255,255,255,0.78);
+}
 
-.ph-note__icon-button {
-  width: 20px;
-  height: 20px;
+.ph-note__title::placeholder {
+  color: rgba(0,0,0,0.3);
+  font-weight: 400;
+}
+
+/* Botones minimizar / eliminar */
+.ph-note__btns {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.ph-note__btn {
+  width: 22px;
+  height: 22px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.6);
-  color: rgba(31, 29, 26, 0.65);
-  cursor: pointer;
-  font-size: 10px;
+  background: rgba(255,255,255,0.55);
+  color: rgba(0,0,0,0.6);
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 120ms, color 120ms;
-  line-height: 1;
 }
 
-.ph-note__icon-button:hover {
-  background: rgba(255, 255, 255, 0.92);
-  color: #1f1d1a;
+.ph-note__btn:hover {
+  background: rgba(255,255,255,0.9);
+  color: rgba(0,0,0,0.9);
+}
+
+.ph-note__btn--del:hover {
+  background: #ef4444;
+  color: #fff;
 }
 
 /* ── Paleta de colores ──────────────────────────────────────────────────── */
-.ph-note__palette {
+.ph-note__colors {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 10px 5px;
-  background: rgba(0, 0, 0, 0.04);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  flex-shrink: 0;
 }
 
+/* Swatches circulares con colores saturados */
 .ph-note__swatch {
-  width: 14px;
-  height: 14px;
-  border: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.0);
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(31, 29, 26, 0.18);
-  transition: transform 120ms, box-shadow 120ms;
   flex-shrink: 0;
+  transition: transform 130ms, border-color 130ms, box-shadow 130ms;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .ph-note__swatch:hover {
-  transform: scale(1.3);
-  box-shadow: inset 0 0 0 1px rgba(31, 29, 26, 0.35), 0 0 0 2px rgba(255,255,255,0.8);
+  transform: scale(1.35);
+  border-color: rgba(0,0,0,0.25);
 }
 
-/* Separador entre swatches y rueda */
-.ph-note__palette-sep {
+.ph-note__swatch--yellow { background: #fde047; }
+.ph-note__swatch--pink   { background: #f472b6; }
+.ph-note__swatch--blue   { background: #60a5fa; }
+.ph-note__swatch--green  { background: #4ade80; }
+.ph-note__swatch--orange { background: #fb923c; }
+.ph-note__swatch--purple { background: #c084fc; }
+
+/* Separador visual entre swatches y rueda */
+.ph-note__sep {
   width: 1px;
   height: 14px;
-  background: rgba(31, 29, 26, 0.18);
-  flex-shrink: 0;
+  background: rgba(0,0,0,0.2);
   margin: 0 2px;
+  flex-shrink: 0;
 }
 
 /* Rueda de color personalizado */
-.ph-note__color-wheel {
-  width: 20px;
-  height: 20px;
-  border: 0;
-  padding: 0;
+.ph-note__wheel {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(0,0,0,0.15);
   border-radius: 999px;
+  padding: 0;
   cursor: pointer;
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba(31, 29, 26, 0.18);
-  overflow: hidden;
   flex-shrink: 0;
-  transition: transform 120ms;
+  overflow: hidden;
+  transition: transform 130ms;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-.ph-note__color-wheel:hover { transform: scale(1.25); }
+.ph-note__wheel:hover { transform: scale(1.3); }
+.ph-note__wheel::-webkit-color-swatch-wrapper { padding: 0; border-radius: 999px; }
+.ph-note__wheel::-webkit-color-swatch         { border: none; border-radius: 999px; }
 
-/* Quitar el borde nativo del input color en WebKit */
-.ph-note__color-wheel::-webkit-color-swatch-wrapper { padding: 0; border-radius: 999px; }
-.ph-note__color-wheel::-webkit-color-swatch         { border: none; border-radius: 999px; }
-
-/* ── Cuerpo + textarea ──────────────────────────────────────────────────── */
+/* ── Área de texto ──────────────────────────────────────────────────────── */
 .ph-note__body {
-  display: block;
-  min-height: 0;
-  padding: 8px 12px 12px;
-}
-
-.ph-note__textarea {
+  flex: 1;
   width: 100%;
-  height: 100%;
-  min-height: 80px;
+  min-height: 0;
   border: 0;
   resize: none;
   background: transparent;
-  color: #1f1d1a;
-  font: 13px/1.5 -apple-system, "Segoe UI", sans-serif;
+  color: rgba(0,0,0,0.82);
+  font: 13px/1.55 inherit;
+  padding: 10px 12px 12px;
   outline: none;
+  box-sizing: border-box;
+}
+
+.ph-note__body::placeholder {
+  color: rgba(0,0,0,0.28);
 }
