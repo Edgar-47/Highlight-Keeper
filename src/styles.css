@@ -83,6 +83,26 @@ body.popup-shell {
   margin-top: 14px;
 }
 
+.note-color-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.note-color-option {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(31, 29, 26, 0.14);
+}
+
+.note-color-option.is-active {
+  border-color: #1f1d1a;
+}
+
 .custom-color {
   margin-top: 14px;
   padding: 12px;
@@ -215,6 +235,10 @@ body.popup-shell {
   margin-top: 14px;
 }
 
+.actions--single {
+  grid-template-columns: 1fr;
+}
+
 .primary-button,
 .secondary-button,
 .text-button {
@@ -343,4 +367,139 @@ body.popup-shell {
   box-shadow:
     inset 0 -2px 0 rgba(133, 77, 14, 0.25),
     inset 0 0 0 1px rgba(133, 77, 14, 0.08);
+}
+
+.ph-note-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+
+.ph-note {
+  position: fixed;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  min-width: 220px;
+  min-height: 140px;
+  border-radius: 18px;
+  box-shadow: 0 20px 36px rgba(31, 29, 26, 0.16);
+  pointer-events: auto;
+  resize: both;
+  overflow: hidden;
+  transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+}
+
+.ph-note:hover {
+  box-shadow: 0 24px 40px rgba(31, 29, 26, 0.22);
+}
+
+.ph-note.is-removing {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.ph-note.is-minimized .ph-note__palette,
+.ph-note.is-minimized .ph-note__body {
+  display: none;
+}
+
+.ph-note--yellow,
+.note-color-option--yellow,
+.ph-note__swatch--yellow {
+  background: #fef08a;
+}
+
+.ph-note--pink,
+.note-color-option--pink,
+.ph-note__swatch--pink {
+  background: #fbcfe8;
+}
+
+.ph-note--blue,
+.note-color-option--blue,
+.ph-note__swatch--blue {
+  background: #bfdbfe;
+}
+
+.ph-note--green,
+.note-color-option--green,
+.ph-note__swatch--green {
+  background: #bbf7d0;
+}
+
+.ph-note--orange,
+.note-color-option--orange,
+.ph-note__swatch--orange {
+  background: #fed7aa;
+}
+
+.ph-note__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px 0;
+}
+
+.ph-note__drag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: grab;
+  user-select: none;
+}
+
+.ph-note__drag:active {
+  cursor: grabbing;
+}
+
+.ph-note__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ph-note__icon-button {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: rgba(31, 29, 26, 0.9);
+  cursor: pointer;
+}
+
+.ph-note__palette {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 0;
+}
+
+.ph-note__swatch {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(31, 29, 26, 0.12);
+}
+
+.ph-note__body {
+  display: block;
+  min-height: 0;
+  padding: 10px 12px 12px;
+}
+
+.ph-note__textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 84px;
+  border: 0;
+  resize: none;
+  background: transparent;
+  color: #1f1d1a;
+  font: inherit;
+  line-height: 1.45;
+  outline: none;
 }

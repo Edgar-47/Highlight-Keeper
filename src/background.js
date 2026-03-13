@@ -42,6 +42,13 @@
         title: "Limpiar resaltados de esta pagina",
         contexts: ["page"]
       });
+
+      chrome.contextMenus.create({
+        id: menuRoot + ":note",
+        parentId: menuRoot,
+        title: "Nueva nota post-it",
+        contexts: ["page"]
+      });
     });
   }
 
@@ -56,7 +63,7 @@
           chrome.scripting.executeScript(
             {
               target: { tabId: tabId },
-              files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/content.js"]
+              files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js"]
             },
             function onScriptsInjected() {
               if (chrome.runtime.lastError) {
@@ -93,6 +100,18 @@
     });
   }
 
+  function getNoteColorSetting() {
+    return new Promise(function resolveColor(resolve) {
+      chrome.storage.local.get([settingsKey], function onSettings(items) {
+        const color =
+          items && items[settingsKey] && typeof items[settingsKey].noteColor === "string"
+            ? items[settingsKey].noteColor
+            : "yellow";
+        resolve(color);
+      });
+    });
+  }
+
   chrome.runtime.onInstalled.addListener(function onInstalled() {
     createMenus();
   });
@@ -111,6 +130,12 @@
     try {
       if (info.menuItemId === menuRoot + ":clear") {
         await sendMessageToTab(tab.id, { type: "CLEAR_HIGHLIGHTS" });
+        return;
+      }
+
+      if (info.menuItemId === menuRoot + ":note") {
+        const noteColor = await getNoteColorSetting();
+        await sendMessageToTab(tab.id, { type: "CREATE_NOTE", color: noteColor });
         return;
       }
 

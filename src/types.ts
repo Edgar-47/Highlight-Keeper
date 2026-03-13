@@ -10,6 +10,7 @@ namespace PersistentHighlighter {
     | "gray";
 
   export type HighlightColor = HighlightPresetColor | "custom";
+  export type NoteColor = "yellow" | "pink" | "blue" | "green" | "orange";
 
   export interface HighlightRecord {
     id: string;
@@ -32,6 +33,21 @@ namespace PersistentHighlighter {
   export interface PopupSettings {
     selectedColor: HighlightColor;
     customColor: string;
+    noteColor: NoteColor;
+  }
+
+  export interface PostItNote {
+    id: string;
+    url: string;
+    text: string;
+    color: NoteColor;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    isMinimized: boolean;
+    createdAt: string;
+    updatedAt: string;
   }
 
   export interface ExtensionResponse<T = undefined> {
@@ -42,6 +58,7 @@ namespace PersistentHighlighter {
 
   export interface HighlightOperationResult {
     record?: HighlightRecord;
+    note?: PostItNote;
     removedId?: string;
     removedCount?: number;
   }
@@ -50,9 +67,12 @@ namespace PersistentHighlighter {
     | { type: "APPLY_HIGHLIGHT"; color: HighlightColor; customColor?: string }
     | { type: "REMOVE_HIGHLIGHT"; highlightId: string }
     | { type: "CLEAR_HIGHLIGHTS" }
-    | { type: "RESTORE_HIGHLIGHTS" };
+    | { type: "RESTORE_HIGHLIGHTS" }
+    | { type: "CREATE_NOTE"; color: NoteColor }
+    | { type: "RESTORE_NOTES" };
 
   export const STORAGE_KEY = "persistent-highlighter.recordsByUrl";
+  export const NOTES_STORAGE_KEY = "persistent-highlighter.notesByUrl";
   export const SETTINGS_KEY = "persistent-highlighter.settings";
   export const HIGHLIGHT_CLASS = "ph-highlight";
   export const HIGHLIGHT_ATTR = "data-ph-id";
@@ -67,6 +87,13 @@ namespace PersistentHighlighter {
     { id: "purple", label: "Morado", circle: "🟣" },
     { id: "teal", label: "Turquesa", circle: "🔹" },
     { id: "gray", label: "Gris", circle: "⚪" }
+  ];
+  export const NOTE_COLOR_OPTIONS: Array<{ id: NoteColor; label: string }> = [
+    { id: "yellow", label: "Amarillo" },
+    { id: "pink", label: "Rosa" },
+    { id: "blue", label: "Azul" },
+    { id: "green", label: "Verde" },
+    { id: "orange", label: "Naranja" }
   ];
 
   export function normalizeUrl(rawUrl: string): string {
@@ -85,6 +112,10 @@ namespace PersistentHighlighter {
 
   export function createId(): string {
     return `hl_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  export function createNoteId(): string {
+    return `note_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   }
 
   export function buildSignature(

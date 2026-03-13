@@ -2,6 +2,7 @@
   const namespace = global.PersistentHighlighter || (global.PersistentHighlighter = {});
 
   namespace.STORAGE_KEY = "persistent-highlighter.recordsByUrl";
+  namespace.NOTES_STORAGE_KEY = "persistent-highlighter.notesByUrl";
   namespace.SETTINGS_KEY = "persistent-highlighter.settings";
   namespace.HIGHLIGHT_CLASS = "ph-highlight";
   namespace.HIGHLIGHT_ATTR = "data-ph-id";
@@ -16,6 +17,13 @@
     { id: "purple", label: "Morado", circle: "🟣" },
     { id: "teal", label: "Turquesa", circle: "🔹" },
     { id: "gray", label: "Gris", circle: "⚪" }
+  ];
+  namespace.NOTE_COLOR_OPTIONS = [
+    { id: "yellow", label: "Amarillo" },
+    { id: "pink", label: "Rosa" },
+    { id: "blue", label: "Azul" },
+    { id: "green", label: "Verde" },
+    { id: "orange", label: "Naranja" }
   ];
 
   namespace.normalizeUrl = function normalizeUrl(rawUrl) {
@@ -34,6 +42,10 @@
 
   namespace.createId = function createId() {
     return "hl_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+  };
+
+  namespace.createNoteId = function createNoteId() {
+    return "note_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
   };
 
   namespace.buildSignature = function buildSignature(selectedText, prefix, suffix, domHint) {

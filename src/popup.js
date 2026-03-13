@@ -40,7 +40,7 @@
           chrome.scripting.executeScript(
             {
               target: { tabId: tabId },
-              files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/content.js"]
+              files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js"]
             },
             function onScriptsInjected() {
               if (chrome.runtime.lastError) {
@@ -103,6 +103,27 @@
     });
   }
 
+  function renderNoteColorOptions(selectedColor) {
+    const container = getElement("note-color-options");
+    container.innerHTML = "";
+
+    namespace.NOTE_COLOR_OPTIONS.forEach(function renderColor(color) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.noteColor = color.id;
+      button.className =
+        "note-color-option note-color-option--" +
+        color.id +
+        (color.id === selectedColor ? " is-active" : "");
+      button.setAttribute("aria-label", "Color " + color.label);
+      button.addEventListener("click", async function onColorClick() {
+        await storage.saveSettings({ noteColor: color.id });
+        renderNoteColorOptions(color.id);
+      });
+      container.appendChild(button);
+    });
+  }
+
   function updateCustomColorPreview(color) {
     const preview = getElement("custom-color-preview");
     preview.style.backgroundColor = namespace.sanitizeColorHex(color);
@@ -121,18 +142,22 @@
     const status = getElement("status");
     const list = getElement("highlight-list");
     const count = getElement("highlight-count");
+    const noteCount = getElement("note-count");
     const pageUrl = getElement("page-url");
 
     if (!currentTab) {
       status.textContent = "Abre una web normal para usar el resaltado.";
       list.innerHTML = "";
       count.textContent = "0";
+      noteCount.textContent = "0";
       pageUrl.textContent = "Página no compatible";
       return;
     }
 
     const highlights = await storage.getHighlights(currentTab.url);
+    const notes = await storage.getNotes(currentTab.url);
     count.textContent = String(highlights.length);
+    noteCount.textContent = String(notes.length);
     pageUrl.textContent = currentTab.url;
 
     if (!highlights.length) {
@@ -203,6 +228,7 @@
 
     const settings = await storage.getSettings();
     renderColorOptions(settings.selectedColor);
+    renderNoteColorOptions(settings.noteColor);
     getElement("custom-color-input").value = settings.customColor;
     updateCustomColorPreview(settings.customColor);
 
@@ -218,6 +244,21 @@
       updateCustomColorPreview(customColor);
       await storage.saveSettings({ selectedColor: "custom", customColor: customColor });
       renderColorOptions("custom");
+    });
+
+    getElement("create-note").addEventListener("click", async function onCreateNote() {
+      const nextSettings = await storage.getSettings();
+      await runAction(async function createNote() {
+        await ensureActiveTabReady();
+        const response = await sendMessageToActiveTab({
+          type: "CREATE_NOTE",
+          color: nextSettings.noteColor
+        });
+
+        if (!response || !response.ok) {
+          throw new Error((response && response.error) || "No se pudo crear la nota.");
+        }
+      });
     });
 
     getElement("highlight-selection").addEventListener("click", async function onHighlight() {

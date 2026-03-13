@@ -58,7 +58,11 @@
           : namespace.DEFAULT_COLOR,
       customColor: namespace.sanitizeColorHex(
         items[namespace.SETTINGS_KEY] ? items[namespace.SETTINGS_KEY].customColor : undefined
-      )
+      ),
+      noteColor:
+        items[namespace.SETTINGS_KEY] && items[namespace.SETTINGS_KEY].noteColor
+          ? items[namespace.SETTINGS_KEY].noteColor
+          : "yellow"
     };
   };
 
@@ -89,6 +93,52 @@
     });
   };
 
+  HighlightStorage.prototype.getNotes = async function getNotes(url) {
+    const notesByUrl = await this.getNotesByUrl();
+    const normalizedUrl = namespace.normalizeUrl(url);
+    const notes = notesByUrl[normalizedUrl] || [];
+    return notes
+      .slice()
+      .sort(function sortByDate(left, right) {
+        return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
+      });
+  };
+
+  HighlightStorage.prototype.saveNote = async function saveNote(note) {
+    const notesByUrl = await this.getNotesByUrl();
+    const normalizedUrl = namespace.normalizeUrl(note.url);
+    const existing = notesByUrl[normalizedUrl] || [];
+    const deduped = existing.filter(function filterById(item) {
+      return item.id !== note.id;
+    });
+
+    deduped.push(Object.assign({}, note, { url: normalizedUrl }));
+    notesByUrl[normalizedUrl] = deduped;
+    await this.writeNotesByUrl(notesByUrl);
+    return deduped;
+  };
+
+  HighlightStorage.prototype.removeNote = async function removeNote(url, noteId) {
+    const notesByUrl = await this.getNotesByUrl();
+    const normalizedUrl = namespace.normalizeUrl(url);
+    const existing = notesByUrl[normalizedUrl] || [];
+
+    notesByUrl[normalizedUrl] = existing.filter(function filterById(note) {
+      return note.id !== noteId;
+    });
+
+    await this.writeNotesByUrl(notesByUrl);
+    return notesByUrl[normalizedUrl];
+  };
+
+  HighlightStorage.prototype.clearNotes = async function clearNotes(url) {
+    const notesByUrl = await this.getNotesByUrl();
+    const normalizedUrl = namespace.normalizeUrl(url);
+
+    delete notesByUrl[normalizedUrl];
+    await this.writeNotesByUrl(notesByUrl);
+  };
+
   HighlightStorage.prototype.getRecordsByUrl = async function getRecordsByUrl() {
     const items = await this.getFromStorage([namespace.STORAGE_KEY]);
     return items[namespace.STORAGE_KEY] || {};
@@ -96,6 +146,15 @@
 
   HighlightStorage.prototype.writeRecordsByUrl = async function writeRecordsByUrl(recordsByUrl) {
     await this.setInStorage({ [namespace.STORAGE_KEY]: recordsByUrl });
+  };
+
+  HighlightStorage.prototype.getNotesByUrl = async function getNotesByUrl() {
+    const items = await this.getFromStorage([namespace.NOTES_STORAGE_KEY]);
+    return items[namespace.NOTES_STORAGE_KEY] || {};
+  };
+
+  HighlightStorage.prototype.writeNotesByUrl = async function writeNotesByUrl(notesByUrl) {
+    await this.setInStorage({ [namespace.NOTES_STORAGE_KEY]: notesByUrl });
   };
 
   HighlightStorage.prototype.getFromStorage = function getFromStorage(keys) {

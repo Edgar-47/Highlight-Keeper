@@ -1,6 +1,7 @@
 /// <reference path="./types.ts" />
 /// <reference path="./storage.ts" />
 /// <reference path="./highlighter.ts" />
+/// <reference path="./notes.ts" />
 
 namespace PersistentHighlighter {
   const contentWindow = window as Window & { __persistentHighlighterLoaded?: boolean };
@@ -11,6 +12,7 @@ namespace PersistentHighlighter {
 
     const storage = new HighlightStorage();
     const renderer = new HighlightRenderer(storage);
+    const notesBoard = new NotesBoard(storage);
 
     function buildResponse<T>(payload: ExtensionResponse<T>): ExtensionResponse<T> {
       return payload;
@@ -34,6 +36,14 @@ namespace PersistentHighlighter {
         }
         case "RESTORE_HIGHLIGHTS": {
           const removedCount = await renderer.restoreHighlightsForCurrentPage();
+          return buildResponse({ ok: true, data: { removedCount } });
+        }
+        case "CREATE_NOTE": {
+          const note = await notesBoard.createNote(message.color);
+          return buildResponse({ ok: true, data: { note } });
+        }
+        case "RESTORE_NOTES": {
+          const removedCount = await notesBoard.restoreNotesForCurrentPage();
           return buildResponse({ ok: true, data: { removedCount } });
         }
         default:
@@ -89,7 +99,9 @@ namespace PersistentHighlighter {
     async function bootstrap(): Promise<void> {
       try {
         await renderer.restoreHighlightsForCurrentPage();
+        await notesBoard.restoreNotesForCurrentPage();
         renderer.observeDynamicContent();
+        notesBoard.observeViewport();
       } catch (error) {
         console.error("PersistentHighlighter: bootstrap failed", error);
       }

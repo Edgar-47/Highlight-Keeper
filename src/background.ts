@@ -45,6 +45,13 @@ namespace PersistentHighlighterBackground {
         title: "Limpiar resaltados de esta pagina",
         contexts: ["page"]
       });
+
+      chrome.contextMenus.create({
+        id: `${MENU_ROOT}:note`,
+        parentId: MENU_ROOT,
+        title: "Nueva nota post-it",
+        contexts: ["page"]
+      });
     });
   }
 
@@ -59,7 +66,7 @@ namespace PersistentHighlighterBackground {
           chrome.scripting.executeScript(
             {
               target: { tabId },
-              files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/content.js"]
+              files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js"]
             },
             () => {
               if (chrome.runtime.lastError) {
@@ -93,6 +100,15 @@ namespace PersistentHighlighterBackground {
     });
   }
 
+  function getNoteColorSetting(): Promise<NoteColor> {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([SETTINGS_KEY], (items) => {
+        const color = items?.[SETTINGS_KEY]?.noteColor;
+        resolve(typeof color === "string" ? (color as NoteColor) : "yellow");
+      });
+    });
+  }
+
   chrome.runtime.onInstalled.addListener(() => {
     createMenus();
   });
@@ -109,6 +125,12 @@ namespace PersistentHighlighterBackground {
     try {
       if (info.menuItemId === `${MENU_ROOT}:clear`) {
         await sendMessageToTab(tab.id, { type: "CLEAR_HIGHLIGHTS" });
+        return;
+      }
+
+      if (info.menuItemId === `${MENU_ROOT}:note`) {
+        const noteColor = await getNoteColorSetting();
+        await sendMessageToTab(tab.id, { type: "CREATE_NOTE", color: noteColor });
         return;
       }
 

@@ -7,6 +7,7 @@
   const namespace = global.PersistentHighlighter;
   const storage = new namespace.HighlightStorage();
   const renderer = new namespace.HighlightRenderer(storage);
+  const notesBoard = new namespace.NotesBoard(storage);
 
   function buildResponse(payload) {
     return payload;
@@ -28,6 +29,14 @@
       }
       case "RESTORE_HIGHLIGHTS": {
         const removedCount = await renderer.restoreHighlightsForCurrentPage();
+        return buildResponse({ ok: true, data: { removedCount: removedCount } });
+      }
+      case "CREATE_NOTE": {
+        const note = await notesBoard.createNote(message.color);
+        return buildResponse({ ok: true, data: { note: note } });
+      }
+      case "RESTORE_NOTES": {
+        const removedCount = await notesBoard.restoreNotesForCurrentPage();
         return buildResponse({ ok: true, data: { removedCount: removedCount } });
       }
       default:
@@ -88,7 +97,9 @@
   async function bootstrap() {
     try {
       await renderer.restoreHighlightsForCurrentPage();
+      await notesBoard.restoreNotesForCurrentPage();
       renderer.observeDynamicContent();
+      notesBoard.observeViewport();
     } catch (error) {
       console.error("PersistentHighlighter: bootstrap failed", error);
     }
