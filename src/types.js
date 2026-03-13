@@ -8,14 +8,14 @@
   namespace.DYNAMIC_RESTORE_DELAY_MS = 700;
   namespace.DEFAULT_COLOR = "yellow";
   namespace.COLOR_OPTIONS = [
-    { id: "yellow", label: "Amarillo" },
-    { id: "green", label: "Verde" },
-    { id: "blue", label: "Azul" },
-    { id: "pink", label: "Rosa" },
-    { id: "orange", label: "Naranja" },
-    { id: "purple", label: "Morado" },
-    { id: "teal", label: "Turquesa" },
-    { id: "gray", label: "Gris" }
+    { id: "yellow", label: "Amarillo", circle: "🟡" },
+    { id: "green", label: "Verde", circle: "🟢" },
+    { id: "blue", label: "Azul", circle: "🔵" },
+    { id: "pink", label: "Rosa", circle: "🩷" },
+    { id: "orange", label: "Naranja", circle: "🟠" },
+    { id: "purple", label: "Morado", circle: "🟣" },
+    { id: "teal", label: "Turquesa", circle: "🔹" },
+    { id: "gray", label: "Gris", circle: "⚪" }
   ];
 
   namespace.normalizeUrl = function normalizeUrl(rawUrl) {
@@ -43,5 +43,10 @@
       namespace.normalizeText(suffix).toLowerCase(),
       String(domHint || "").toLowerCase()
     ].join("::");
+  };
+
+  namespace.sanitizeColorHex = function sanitizeColorHex(rawColor) {
+    const value = String(rawColor || "").trim();
+    return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : "#facc15";
   };
 })(globalThis);

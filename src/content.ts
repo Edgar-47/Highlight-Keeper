@@ -21,7 +21,7 @@ namespace PersistentHighlighter {
     ): Promise<ExtensionResponse<HighlightOperationResult>> {
       switch (message.type) {
         case "APPLY_HIGHLIGHT": {
-          const record = await renderer.applySelectionHighlight(message.color);
+          const record = await renderer.applySelectionHighlight(message.color, message.customColor);
           return buildResponse({ ok: true, data: { record } });
         }
         case "REMOVE_HIGHLIGHT": {

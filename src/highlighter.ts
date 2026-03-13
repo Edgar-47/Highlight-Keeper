@@ -21,7 +21,7 @@ namespace PersistentHighlighter {
 
     constructor(private readonly storage: HighlightStorage) {}
 
-    async applySelectionHighlight(color: HighlightColor): Promise<HighlightRecord> {
+    async applySelectionHighlight(color: HighlightColor, customColor?: string): Promise<HighlightRecord> {
       const selection = window.getSelection();
       const liveRange =
         selection && selection.rangeCount > 0 && !selection.isCollapsed ? selection.getRangeAt(0).cloneRange() : null;
@@ -30,6 +30,8 @@ namespace PersistentHighlighter {
       if (!selectedText) {
         throw new Error("Selecciona un texto antes de resaltar.");
       }
+
+      const resolvedCustomColor = color === "custom" ? sanitizeColorHex(customColor) : undefined;
 
       if (!range || !this.isRangeHighlightable(range)) {
         const selectedHighlight = this.findHighlightElementForNode(range?.commonAncestorContainer || null);
@@ -48,28 +50,34 @@ namespace PersistentHighlighter {
           throw new Error("No se encontró el resaltado existente.");
         }
 
-        if (existingRecord.color === color) {
+        if (existingRecord.color === color && existingRecord.customColor === resolvedCustomColor) {
           throw new Error("Ese texto ya tiene ese color.");
         }
 
-        const updatedRecord = { ...existingRecord, color };
-        this.updateHighlightElementColor(selectedHighlight, color);
+        const updatedRecord = { ...existingRecord, color, customColor: resolvedCustomColor };
+        this.updateHighlightElementColor(selectedHighlight, color, resolvedCustomColor);
         await this.storage.saveHighlight(updatedRecord);
         return updatedRecord;
       }
 
-      const record = this.createRecordFromRange(range, selectedText, color, normalizeUrl(window.location.href));
+      const record = this.createRecordFromRange(
+        range,
+        selectedText,
+        color,
+        normalizeUrl(window.location.href),
+        resolvedCustomColor
+      );
       const existing = await this.storage.getHighlights(record.url);
       const matchingRecord = this.storage.findMatchingHighlight(existing, record);
       if (matchingRecord) {
-        if (matchingRecord.color === color) {
+        if (matchingRecord.color === color && matchingRecord.customColor === resolvedCustomColor) {
           throw new Error("Ese texto ya tiene ese color.");
         }
 
-        const updatedRecord = { ...matchingRecord, color };
+        const updatedRecord = { ...matchingRecord, color, customColor: resolvedCustomColor };
         const existingElement = this.findHighlightElement(matchingRecord.id);
         if (existingElement) {
-          this.updateHighlightElementColor(existingElement, color);
+          this.updateHighlightElementColor(existingElement, color, resolvedCustomColor);
         } else {
           this.wrapRange(range, updatedRecord);
         }
@@ -184,7 +192,8 @@ namespace PersistentHighlighter {
       range: Range,
       selectedText: string,
       color: HighlightColor,
-      url: string
+      url: string,
+      customColor?: string
     ): HighlightRecord {
       const prefix = this.getContextSnippet(range, "prefix");
       const suffix = this.getContextSnippet(range, "suffix");
@@ -195,6 +204,7 @@ namespace PersistentHighlighter {
         url,
         selectedText,
         color,
+        customColor,
         createdAt: new Date().toISOString(),
         surroundingText: `${prefix}${selectedText}${suffix}`.trim(),
         prefix,
@@ -353,6 +363,11 @@ namespace PersistentHighlighter {
       wrapper.className = `${HIGHLIGHT_CLASS} ${HIGHLIGHT_CLASS}--${record.color}`;
       wrapper.setAttribute(HIGHLIGHT_ATTR, record.id);
       wrapper.setAttribute("data-ph-color", record.color);
+      if (record.customColor) {
+        wrapper.style.setProperty("--ph-custom-highlight", record.customColor);
+      } else {
+        wrapper.style.removeProperty("--ph-custom-highlight");
+      }
       wrapper.setAttribute("title", "Alt-click to remove highlight");
 
       const contents = range.extractContents();
@@ -388,11 +403,21 @@ namespace PersistentHighlighter {
       return element?.closest(`.${HIGHLIGHT_CLASS}`) as HTMLElement | null;
     }
 
-    private updateHighlightElementColor(element: HTMLElement, color: HighlightColor): void {
+    private updateHighlightElementColor(
+      element: HTMLElement,
+      color: HighlightColor,
+      customColor?: string
+    ): void {
       const colorClasses = COLOR_OPTIONS.map(({ id }) => `${HIGHLIGHT_CLASS}--${id}`);
+      colorClasses.push(`${HIGHLIGHT_CLASS}--custom`);
       element.classList.remove(...colorClasses);
       element.classList.add(`${HIGHLIGHT_CLASS}--${color}`);
       element.setAttribute("data-ph-color", color);
+      if (customColor) {
+        element.style.setProperty("--ph-custom-highlight", customColor);
+      } else {
+        element.style.removeProperty("--ph-custom-highlight");
+      }
     }
 
     private getContextSnippet(range: Range, side: "prefix" | "suffix"): string {

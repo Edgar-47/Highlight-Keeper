@@ -20,13 +20,23 @@
           <span class="count-pill count-pill--soft">8</span>
         </div>
         <div id="color-options" class="color-list"></div>
+        <div class="custom-color">
+          <div class="custom-color__header">
+            <h3>Color personalizado</h3>
+            <span id="custom-color-preview" class="custom-color__preview"></span>
+          </div>
+          <div class="custom-color__controls">
+            <input id="custom-color-input" class="custom-color__input" type="color" value="#facc15" />
+            <button id="use-custom-color" class="secondary-button" type="button">Usar este color</button>
+          </div>
+        </div>
 
         <div class="actions">
           <button id="highlight-selection" class="primary-button" type="button">Resaltar selección</button>
           <button id="restore-page" class="secondary-button" type="button">Reaplicar</button>
           <button id="clear-page" class="secondary-button secondary-button--danger" type="button">Limpiar página</button>
         </div>
-        <p class="helper-text">Consejo: también puedes seleccionar texto y usar clic derecho.</p>
+        <p class="helper-text">Consejo: también puedes seleccionar texto y usar clic derecho. El menú usa tu último color personalizado.</p>
         <p id="status" class="status">Listo.</p>
       </section>
 

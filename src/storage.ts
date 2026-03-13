@@ -43,7 +43,8 @@ namespace PersistentHighlighter {
     async getSettings(): Promise<PopupSettings> {
       const items = await this.getFromStorage<{ [SETTINGS_KEY]?: PopupSettings }>([SETTINGS_KEY]);
       return {
-        selectedColor: items[SETTINGS_KEY]?.selectedColor || DEFAULT_COLOR
+        selectedColor: items[SETTINGS_KEY]?.selectedColor || DEFAULT_COLOR,
+        customColor: sanitizeColorHex(items[SETTINGS_KEY]?.customColor)
       };
     }
 

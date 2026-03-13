@@ -55,7 +55,10 @@
       selectedColor:
         items[namespace.SETTINGS_KEY] && items[namespace.SETTINGS_KEY].selectedColor
           ? items[namespace.SETTINGS_KEY].selectedColor
-          : namespace.DEFAULT_COLOR
+          : namespace.DEFAULT_COLOR,
+      customColor: namespace.sanitizeColorHex(
+        items[namespace.SETTINGS_KEY] ? items[namespace.SETTINGS_KEY].customColor : undefined
+      )
     };
   };
 

@@ -1,15 +1,16 @@
 (function bootstrapBackground() {
   const colorOptions = [
-    { id: "yellow", label: "Amarillo" },
-    { id: "green", label: "Verde" },
-    { id: "blue", label: "Azul" },
-    { id: "pink", label: "Rosa" },
-    { id: "orange", label: "Naranja" },
-    { id: "purple", label: "Morado" },
-    { id: "teal", label: "Turquesa" },
-    { id: "gray", label: "Gris" }
+    { id: "yellow", label: "Amarillo", circle: "\u{1F7E1}" },
+    { id: "green", label: "Verde", circle: "\u{1F7E2}" },
+    { id: "blue", label: "Azul", circle: "\u{1F535}" },
+    { id: "pink", label: "Rosa", circle: "\u{1FA77}" },
+    { id: "orange", label: "Naranja", circle: "\u{1F7E0}" },
+    { id: "purple", label: "Morado", circle: "\u{1F7E3}" },
+    { id: "teal", label: "Turquesa", circle: "\u{1F539}" },
+    { id: "gray", label: "Gris", circle: "\u26AA" }
   ];
   const menuRoot = "persistent-highlighter";
+  const settingsKey = "persistent-highlighter.settings";
 
   function createMenus() {
     chrome.contextMenus.removeAll(function onRemoved() {
@@ -23,15 +24,22 @@
         chrome.contextMenus.create({
           id: menuRoot + ":highlight:" + color.id,
           parentId: menuRoot,
-          title: "Resaltar en " + color.label,
+          title: color.circle + " " + color.label,
           contexts: ["selection"]
         });
       });
 
       chrome.contextMenus.create({
+        id: menuRoot + ":highlight:custom",
+        parentId: menuRoot,
+        title: "\u{1F3A8} Ultimo color personalizado",
+        contexts: ["selection"]
+      });
+
+      chrome.contextMenus.create({
         id: menuRoot + ":clear",
         parentId: menuRoot,
-        title: "Limpiar resaltados de esta página",
+        title: "Limpiar resaltados de esta pagina",
         contexts: ["page"]
       });
     });
@@ -73,6 +81,18 @@
     }
   }
 
+  function getCustomColorSetting() {
+    return new Promise(function resolveColor(resolve) {
+      chrome.storage.local.get([settingsKey], function onSettings(items) {
+        const color =
+          items && items[settingsKey] && typeof items[settingsKey].customColor === "string"
+            ? items[settingsKey].customColor
+            : "#facc15";
+        resolve(color);
+      });
+    });
+  }
+
   chrome.runtime.onInstalled.addListener(function onInstalled() {
     createMenus();
   });
@@ -96,6 +116,16 @@
 
       if (typeof info.menuItemId === "string" && info.menuItemId.indexOf(menuRoot + ":highlight:") === 0) {
         const color = info.menuItemId.split(":").pop();
+        if (color === "custom") {
+          const customColor = await getCustomColorSetting();
+          await sendMessageToTab(tab.id, {
+            type: "APPLY_HIGHLIGHT",
+            color: "custom",
+            customColor: customColor
+          });
+          return;
+        }
+
         await sendMessageToTab(tab.id, { type: "APPLY_HIGHLIGHT", color: color });
       }
     } catch (error) {

@@ -9,7 +9,7 @@
     this.lastSelectionRange = null;
   }
 
-  HighlightRenderer.prototype.applySelectionHighlight = async function applySelectionHighlight(color) {
+  HighlightRenderer.prototype.applySelectionHighlight = async function applySelectionHighlight(color, customColor) {
     const selection = window.getSelection();
     const liveRange =
       selection && selection.rangeCount > 0 && !selection.isCollapsed ? selection.getRangeAt(0).cloneRange() : null;
@@ -18,6 +18,8 @@
     if (!selectedText) {
       throw new Error("Selecciona un texto antes de resaltar.");
     }
+
+    const resolvedCustomColor = color === "custom" ? namespace.sanitizeColorHex(customColor) : undefined;
 
     if (!range || !this.isRangeHighlightable(range)) {
       const selectedHighlight = this.findHighlightElementForNode(range ? range.commonAncestorContainer : null);
@@ -38,12 +40,15 @@
         throw new Error("No se encontró el resaltado existente.");
       }
 
-      if (existingRecord.color === color) {
+      if (existingRecord.color === color && existingRecord.customColor === resolvedCustomColor) {
         throw new Error("Ese texto ya tiene ese color.");
       }
 
-      const updatedRecord = Object.assign({}, existingRecord, { color: color });
-      this.updateHighlightElementColor(selectedHighlight, color);
+      const updatedRecord = Object.assign({}, existingRecord, {
+        color: color,
+        customColor: resolvedCustomColor
+      });
+      this.updateHighlightElementColor(selectedHighlight, color, resolvedCustomColor);
       await this.storage.saveHighlight(updatedRecord);
       return updatedRecord;
     }
@@ -52,19 +57,23 @@
       range,
       selectedText,
       color,
-      namespace.normalizeUrl(window.location.href)
+      namespace.normalizeUrl(window.location.href),
+      resolvedCustomColor
     );
     const existing = await this.storage.getHighlights(record.url);
     const matchingRecord = this.storage.findMatchingHighlight(existing, record);
     if (matchingRecord) {
-      if (matchingRecord.color === color) {
+      if (matchingRecord.color === color && matchingRecord.customColor === resolvedCustomColor) {
         throw new Error("Ese texto ya tiene ese color.");
       }
 
-      const updatedRecord = Object.assign({}, matchingRecord, { color: color });
+      const updatedRecord = Object.assign({}, matchingRecord, {
+        color: color,
+        customColor: resolvedCustomColor
+      });
       const existingElement = this.findHighlightElement(matchingRecord.id);
       if (existingElement) {
-        this.updateHighlightElementColor(existingElement, color);
+        this.updateHighlightElementColor(existingElement, color, resolvedCustomColor);
       } else {
         this.wrapRange(range, updatedRecord);
       }
@@ -196,7 +205,8 @@
     range,
     selectedText,
     color,
-    url
+    url,
+    customColor
   ) {
     const prefix = this.getContextSnippet(range, "prefix");
     const suffix = this.getContextSnippet(range, "suffix");
@@ -207,6 +217,7 @@
       url: url,
       selectedText: selectedText,
       color: color,
+      customColor: customColor,
       createdAt: new Date().toISOString(),
       surroundingText: (prefix + selectedText + suffix).trim(),
       prefix: prefix,
@@ -378,6 +389,11 @@
     wrapper.className = namespace.HIGHLIGHT_CLASS + " " + namespace.HIGHLIGHT_CLASS + "--" + record.color;
     wrapper.setAttribute(namespace.HIGHLIGHT_ATTR, record.id);
     wrapper.setAttribute("data-ph-color", record.color);
+    if (record.customColor) {
+      wrapper.style.setProperty("--ph-custom-highlight", record.customColor);
+    } else {
+      wrapper.style.removeProperty("--ph-custom-highlight");
+    }
     wrapper.setAttribute("title", "Alt-click to remove highlight");
 
     const contents = range.extractContents();
@@ -415,13 +431,23 @@
     return element ? element.closest("." + namespace.HIGHLIGHT_CLASS) : null;
   };
 
-  HighlightRenderer.prototype.updateHighlightElementColor = function updateHighlightElementColor(element, color) {
+  HighlightRenderer.prototype.updateHighlightElementColor = function updateHighlightElementColor(
+    element,
+    color,
+    customColor
+  ) {
     const colorClasses = namespace.COLOR_OPTIONS.map(function mapColor(option) {
       return namespace.HIGHLIGHT_CLASS + "--" + option.id;
     });
+    colorClasses.push(namespace.HIGHLIGHT_CLASS + "--custom");
     element.classList.remove.apply(element.classList, colorClasses);
     element.classList.add(namespace.HIGHLIGHT_CLASS + "--" + color);
     element.setAttribute("data-ph-color", color);
+    if (customColor) {
+      element.style.setProperty("--ph-custom-highlight", customColor);
+    } else {
+      element.style.removeProperty("--ph-custom-highlight");
+    }
   };
 
   HighlightRenderer.prototype.getContextSnippet = function getContextSnippet(range, side) {

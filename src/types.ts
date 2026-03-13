@@ -1,5 +1,5 @@
 namespace PersistentHighlighter {
-  export type HighlightColor =
+  export type HighlightPresetColor =
     | "yellow"
     | "green"
     | "blue"
@@ -9,11 +9,14 @@ namespace PersistentHighlighter {
     | "teal"
     | "gray";
 
+  export type HighlightColor = HighlightPresetColor | "custom";
+
   export interface HighlightRecord {
     id: string;
     url: string;
     selectedText: string;
     color: HighlightColor;
+    customColor?: string;
     createdAt: string;
     surroundingText: string;
     prefix: string;
@@ -28,6 +31,7 @@ namespace PersistentHighlighter {
 
   export interface PopupSettings {
     selectedColor: HighlightColor;
+    customColor: string;
   }
 
   export interface ExtensionResponse<T = undefined> {
@@ -43,7 +47,7 @@ namespace PersistentHighlighter {
   }
 
   export type ExtensionMessage =
-    | { type: "APPLY_HIGHLIGHT"; color: HighlightColor }
+    | { type: "APPLY_HIGHLIGHT"; color: HighlightColor; customColor?: string }
     | { type: "REMOVE_HIGHLIGHT"; highlightId: string }
     | { type: "CLEAR_HIGHLIGHTS" }
     | { type: "RESTORE_HIGHLIGHTS" };
@@ -54,15 +58,15 @@ namespace PersistentHighlighter {
   export const HIGHLIGHT_ATTR = "data-ph-id";
   export const DYNAMIC_RESTORE_DELAY_MS = 700;
   export const DEFAULT_COLOR: HighlightColor = "yellow";
-  export const COLOR_OPTIONS: Array<{ id: HighlightColor; label: string }> = [
-    { id: "yellow", label: "Amarillo" },
-    { id: "green", label: "Verde" },
-    { id: "blue", label: "Azul" },
-    { id: "pink", label: "Rosa" },
-    { id: "orange", label: "Naranja" },
-    { id: "purple", label: "Morado" },
-    { id: "teal", label: "Turquesa" },
-    { id: "gray", label: "Gris" }
+  export const COLOR_OPTIONS: Array<{ id: HighlightPresetColor; label: string; circle: string }> = [
+    { id: "yellow", label: "Amarillo", circle: "🟡" },
+    { id: "green", label: "Verde", circle: "🟢" },
+    { id: "blue", label: "Azul", circle: "🔵" },
+    { id: "pink", label: "Rosa", circle: "🩷" },
+    { id: "orange", label: "Naranja", circle: "🟠" },
+    { id: "purple", label: "Morado", circle: "🟣" },
+    { id: "teal", label: "Turquesa", circle: "🔹" },
+    { id: "gray", label: "Gris", circle: "⚪" }
   ];
 
   export function normalizeUrl(rawUrl: string): string {
@@ -95,5 +99,10 @@ namespace PersistentHighlighter {
       normalizeText(suffix).toLowerCase(),
       (domHint || "").toLowerCase()
     ].join("::");
+  }
+
+  export function sanitizeColorHex(rawColor?: string): string {
+    const value = (rawColor || "").trim();
+    return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : "#facc15";
   }
 }

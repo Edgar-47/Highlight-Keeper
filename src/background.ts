@@ -2,17 +2,18 @@
 
 namespace PersistentHighlighterBackground {
   const COLOR_OPTIONS = [
-    { id: "yellow", label: "Amarillo" },
-    { id: "green", label: "Verde" },
-    { id: "blue", label: "Azul" },
-    { id: "pink", label: "Rosa" },
-    { id: "orange", label: "Naranja" },
-    { id: "purple", label: "Morado" },
-    { id: "teal", label: "Turquesa" },
-    { id: "gray", label: "Gris" }
+    { id: "yellow", label: "Amarillo", circle: "\u{1F7E1}" },
+    { id: "green", label: "Verde", circle: "\u{1F7E2}" },
+    { id: "blue", label: "Azul", circle: "\u{1F535}" },
+    { id: "pink", label: "Rosa", circle: "\u{1FA77}" },
+    { id: "orange", label: "Naranja", circle: "\u{1F7E0}" },
+    { id: "purple", label: "Morado", circle: "\u{1F7E3}" },
+    { id: "teal", label: "Turquesa", circle: "\u{1F539}" },
+    { id: "gray", label: "Gris", circle: "\u26AA" }
   ] as const;
 
   const MENU_ROOT = "persistent-highlighter";
+  const SETTINGS_KEY = "persistent-highlighter.settings";
 
   function createMenus(): void {
     chrome.contextMenus.removeAll(() => {
@@ -26,15 +27,22 @@ namespace PersistentHighlighterBackground {
         chrome.contextMenus.create({
           id: `${MENU_ROOT}:highlight:${color.id}`,
           parentId: MENU_ROOT,
-          title: `Resaltar en ${color.label}`,
+          title: `${color.circle} ${color.label}`,
           contexts: ["selection"]
         });
       }
 
       chrome.contextMenus.create({
+        id: `${MENU_ROOT}:highlight:custom`,
+        parentId: MENU_ROOT,
+        title: "\u{1F3A8} Ultimo color personalizado",
+        contexts: ["selection"]
+      });
+
+      chrome.contextMenus.create({
         id: `${MENU_ROOT}:clear`,
         parentId: MENU_ROOT,
-        title: "Limpiar resaltados de esta página",
+        title: "Limpiar resaltados de esta pagina",
         contexts: ["page"]
       });
     });
@@ -76,6 +84,15 @@ namespace PersistentHighlighterBackground {
     }
   }
 
+  function getCustomColorSetting(): Promise<string> {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([SETTINGS_KEY], (items) => {
+        const color = items?.[SETTINGS_KEY]?.customColor;
+        resolve(typeof color === "string" ? color : "#facc15");
+      });
+    });
+  }
+
   chrome.runtime.onInstalled.addListener(() => {
     createMenus();
   });
@@ -97,6 +114,12 @@ namespace PersistentHighlighterBackground {
 
       if (typeof info.menuItemId === "string" && info.menuItemId.startsWith(`${MENU_ROOT}:highlight:`)) {
         const color = info.menuItemId.split(":").pop();
+        if (color === "custom") {
+          const customColor = await getCustomColorSetting();
+          await sendMessageToTab(tab.id, { type: "APPLY_HIGHLIGHT", color: "custom", customColor });
+          return;
+        }
+
         await sendMessageToTab(tab.id, { type: "APPLY_HIGHLIGHT", color });
       }
     } catch (error) {

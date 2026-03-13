@@ -108,6 +108,11 @@ namespace PersistentHighlighterPopup {
     }
   }
 
+  function updateCustomColorPreview(color: string): void {
+    const preview = getElement<HTMLSpanElement>("custom-color-preview");
+    preview.style.backgroundColor = PersistentHighlighter.sanitizeColorHex(color);
+  }
+
   async function refresh(): Promise<void> {
     const status = getElement<HTMLParagraphElement>("status");
     const list = getElement<HTMLDivElement>("highlight-list");
@@ -136,9 +141,10 @@ namespace PersistentHighlighterPopup {
     for (const record of highlights) {
       const row = document.createElement("div");
       row.className = "highlight-row";
+      const chipStyle = record.customColor ? `style="background:${record.customColor}"` : "";
       row.innerHTML = `
         <div class="highlight-row__meta">
-          <span class="color-chip color-chip--${record.color}"></span>
+          <span class="color-chip ${record.customColor ? "" : `color-chip--${record.color}`}" ${chipStyle}></span>
           <div>
             <p class="highlight-row__text">${escapeHtml(record.selectedText)}</p>
             <p class="highlight-row__subtext">${new Date(record.createdAt).toLocaleString()}</p>
@@ -193,6 +199,22 @@ namespace PersistentHighlighterPopup {
 
     const settings = await storage.getSettings();
     renderColorOptions(settings.selectedColor);
+    getElement<HTMLInputElement>("custom-color-input").value = settings.customColor;
+    updateCustomColorPreview(settings.customColor);
+
+    getElement<HTMLInputElement>("custom-color-input").addEventListener("input", (event) => {
+      const nextColor = PersistentHighlighter.sanitizeColorHex((event.target as HTMLInputElement).value);
+      updateCustomColorPreview(nextColor);
+    });
+
+    getElement<HTMLButtonElement>("use-custom-color").addEventListener("click", async () => {
+      const input = getElement<HTMLInputElement>("custom-color-input");
+      const customColor = PersistentHighlighter.sanitizeColorHex(input.value);
+      input.value = customColor;
+      updateCustomColorPreview(customColor);
+      await storage.saveSettings({ selectedColor: "custom", customColor });
+      renderColorOptions("custom");
+    });
 
     getElement<HTMLButtonElement>("highlight-selection").addEventListener("click", async () => {
       const nextSettings = await storage.getSettings();
@@ -200,7 +222,8 @@ namespace PersistentHighlighterPopup {
         await ensureActiveTabReady();
         const response = await sendMessageToActiveTab({
           type: "APPLY_HIGHLIGHT",
-          color: nextSettings.selectedColor
+          color: nextSettings.selectedColor,
+          customColor: nextSettings.customColor
         });
 
         if (!response?.ok) {

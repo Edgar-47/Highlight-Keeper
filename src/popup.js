@@ -103,6 +103,11 @@
     });
   }
 
+  function updateCustomColorPreview(color) {
+    const preview = getElement("custom-color-preview");
+    preview.style.backgroundColor = namespace.sanitizeColorHex(color);
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, "&amp;")
@@ -140,11 +145,14 @@
     highlights.forEach(function renderRow(record) {
       const row = document.createElement("div");
       row.className = "highlight-row";
+      const chipStyle = record.customColor ? ' style="background:' + record.customColor + '"' : "";
       row.innerHTML =
         '<div class="highlight-row__meta">' +
-        '<span class="color-chip color-chip--' +
-        record.color +
-        '"></span>' +
+        '<span class="color-chip ' +
+        (record.customColor ? "" : "color-chip--" + record.color) +
+        '"' +
+        chipStyle +
+        "></span>" +
         "<div>" +
         '<p class="highlight-row__text">' +
         escapeHtml(record.selectedText) +
@@ -195,6 +203,22 @@
 
     const settings = await storage.getSettings();
     renderColorOptions(settings.selectedColor);
+    getElement("custom-color-input").value = settings.customColor;
+    updateCustomColorPreview(settings.customColor);
+
+    getElement("custom-color-input").addEventListener("input", function onInput(event) {
+      const nextColor = namespace.sanitizeColorHex(event.target.value);
+      updateCustomColorPreview(nextColor);
+    });
+
+    getElement("use-custom-color").addEventListener("click", async function onCustomColor() {
+      const input = getElement("custom-color-input");
+      const customColor = namespace.sanitizeColorHex(input.value);
+      input.value = customColor;
+      updateCustomColorPreview(customColor);
+      await storage.saveSettings({ selectedColor: "custom", customColor: customColor });
+      renderColorOptions("custom");
+    });
 
     getElement("highlight-selection").addEventListener("click", async function onHighlight() {
       const nextSettings = await storage.getSettings();
@@ -202,7 +226,8 @@
         await ensureActiveTabReady();
         const response = await sendMessageToActiveTab({
           type: "APPLY_HIGHLIGHT",
-          color: nextSettings.selectedColor
+          color: nextSettings.selectedColor,
+          customColor: nextSettings.customColor
         });
 
         if (!response || !response.ok) {
