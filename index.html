@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resaltador Persistente | Extension de Chrome</title>
+    <meta
+      name="description"
+      content="Pagina de presentacion de una extension de Chrome para subrayados persistentes y notas post-it flotantes."
+    />
+    <link rel="stylesheet" href="./site.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <nav class="topbar">
+          <span class="brand">
+            <img src="./icons/icon128.png" alt="Logo de la extension" class="brand__icon" />
+            <span>Resaltador Persistente</span>
+          </span>
+          <div class="topbar__links">
+            <a href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">Repositorio</a>
+          </div>
+        </nav>
+
+        <section class="hero__content">
+          <div class="hero__text">
+            <p class="eyebrow">Extension privada para navegador</p>
+            <h1>Una herramienta para leer, subrayar y dejar notas sin perder el contexto.</h1>
+            <p class="hero__copy">
+              Esta extension de Chrome permite guardar subrayados persistentes por pagina y crear notas post-it
+              flotantes sobre cualquier web. El objetivo es convertir una lectura normal en un espacio personal de
+              trabajo, analisis y recordatorios.
+            </p>
+
+            <div class="hero__actions">
+              <a class="button button--primary" href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">
+                Ver codigo
+              </a>
+              <a class="button button--ghost" href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">
+                Perfil de Edgar-47
+              </a>
+            </div>
+          </div>
+
+          <aside class="hero__card">
+            <p class="hero__card-label">Incluye</p>
+            <ul class="hero__list">
+              <li>Subrayado persistente por URL</li>
+              <li>Colores predefinidos y personalizados</li>
+              <li>Notas adhesivas flotantes</li>
+              <li>Arrastre, redimensionado y titulo editable</li>
+              <li>Guardado local con chrome.storage</li>
+            </ul>
+          </aside>
+        </section>
+      </header>
+
+      <main class="content-grid">
+        <section class="panel panel--wide">
+          <p class="section-tag">Para que sirve</p>
+          <h2>Una capa personal sobre cualquier pagina web.</h2>
+          <p>
+            La extension esta pensada para personas que investigan, estudian, comparan informacion o simplemente
+            quieren volver a una pagina y encontrar sus ideas justo donde las dejaron. En vez de depender solo de
+            marcadores o capturas, el contenido relevante se mantiene visible sobre la propia web.
+          </p>
+        </section>
+
+        <section class="panel">
+          <p class="section-tag">Funciones</p>
+          <h2>Lo mas importante</h2>
+          <ul class="feature-list">
+            <li>Subrayar texto seleccionado y recuperarlo al volver a la pagina.</li>
+            <li>Cambiar colores y evitar duplicados innecesarios.</li>
+            <li>Crear notas post-it movibles y editables.</li>
+            <li>Guardar texto, color, posicion, tamano e identificador unico.</li>
+            <li>Trabajar en local sin publicar la extension.</li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <p class="section-tag">Como la hemos hecho</p>
+          <h2>Arquitectura modular para crecer bien.</h2>
+          <p>
+            Se ha construido sobre Manifest V3, separando responsabilidades entre popup, content script, background
+            service worker, almacenamiento y modulos independientes para subrayado y notas. La idea es mantener el
+            proyecto facil de ampliar sin mezclar demasiada logica en un solo archivo.
+          </p>
+        </section>
+
+        <section class="panel panel--wide">
+          <p class="section-tag">Stack tecnico</p>
+          <h2>Lenguajes y tecnologias utilizadas</h2>
+          <div class="stack-grid">
+            <article class="stack-card">
+              <h3>HTML</h3>
+              <p>Estructura de popup, pagina informativa y base visual de la extension.</p>
+            </article>
+            <article class="stack-card">
+              <h3>CSS</h3>
+              <p>Interfaz visual, sistema de color, layout responsive y apariencia de post-it digital.</p>
+            </article>
+            <article class="stack-card">
+              <h3>TypeScript</h3>
+              <p>Codigo fuente mantenible con tipos claros para highlights, mensajes y notas.</p>
+            </article>
+            <article class="stack-card">
+              <h3>JavaScript</h3>
+              <p>Version ejecutable local usada directamente por la extension cargada en Chrome.</p>
+            </article>
+            <article class="stack-card">
+              <h3>Chrome Extension API</h3>
+              <p>Manifest V3, content scripts, popup, context menus, service worker y storage local.</p>
+            </article>
+            <article class="stack-card">
+              <h3>chrome.storage.local</h3>
+              <p>Persistencia de subrayados, colores, notas, posiciones, tamano y ajustes del usuario.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel">
+          <p class="section-tag">Capas</p>
+          <h2>Que hace cada parte</h2>
+          <ul class="feature-list">
+            <li><strong>Popup:</strong> crear resaltados, seleccionar color, crear notas y lanzar acciones.</li>
+            <li><strong>Content script:</strong> pintar highlights y renderizar notas sobre la pagina.</li>
+            <li><strong>Background:</strong> menus contextuales y coordinacion con pestañas.</li>
+            <li><strong>Storage:</strong> persistencia por URL y ajustes de usuario.</li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <p class="section-tag">Estado del proyecto</p>
+          <h2>Hecho para evolucionar</h2>
+          <p>
+            Aunque funciona como herramienta privada/local, el proyecto ya tiene una base preparada para seguir
+            creciendo: exportacion de datos, autenticacion, sincronizacion, panel lateral o incluso una futura version
+            comercial si se decide publicar.
+          </p>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>Proyecto desarrollado por Edgar-47.</p>
+        <div class="footer__links">
+          <a href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">github.com/Edgar-47</a>
+          <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">
+            github.com/Edgar-47/Playground
+          </a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
