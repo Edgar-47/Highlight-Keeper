@@ -3,153 +3,302 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Resaltador Persistente | Extension de Chrome</title>
+    <title>Resaltador Persistente | Extension para leer, subrayar y anotar</title>
     <meta
       name="description"
-      content="Pagina de presentacion de una extension de Chrome para subrayados persistentes y notas post-it flotantes."
+      content="Landing page de una extension de navegador para guardar subrayados persistentes y notas post-it sobre cualquier pagina web."
     />
+    <meta name="color-scheme" content="light dark" />
     <link rel="stylesheet" href="./site.css" />
+    <script src="./script.js" defer></script>
   </head>
   <body>
+    <div class="bg-orb bg-orb--one" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb--two" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="progress-bar" id="progressBar" aria-hidden="true"></div>
+
     <div class="page-shell">
-      <header class="hero">
+      <header class="hero" id="inicio">
         <nav class="topbar">
-          <span class="brand">
+          <a class="brand" href="#inicio" aria-label="Ir al inicio">
             <img src="./icons/icon128.png" alt="Logo de la extension" class="brand__icon" />
-            <span>Resaltador Persistente</span>
-          </span>
-          <div class="topbar__links">
-            <a href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">Repositorio</a>
+            <span class="brand__text">
+              <strong>Resaltador Persistente</strong>
+              <span>Subrayados y notas sobre la web</span>
+            </span>
+          </a>
+
+          <div class="topbar__actions">
+            <div class="topbar__links">
+              <a href="#funciones">Funciones</a>
+              <a href="#arquitectura">Arquitectura</a>
+              <a href="#tecnologias">Tecnologias</a>
+              <a href="#enlaces">Enlaces</a>
+            </div>
+
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">
+              <span class="theme-toggle__icon" aria-hidden="true">◐</span>
+              <span class="theme-toggle__label">Modo oscuro</span>
+            </button>
           </div>
         </nav>
 
         <section class="hero__content">
-          <div class="hero__text">
-            <p class="eyebrow">Extension privada para navegador</p>
-            <h1>Una herramienta para leer, subrayar y dejar notas sin perder el contexto.</h1>
-            <p class="hero__copy">
-              Esta extension de Chrome permite guardar subrayados persistentes por pagina y crear notas post-it
-              flotantes sobre cualquier web. El objetivo es convertir una lectura normal en un espacio personal de
-              trabajo, analisis y recordatorios.
+          <div class="hero__copy reveal">
+            <div class="hero__eyebrow">
+              <span class="badge badge--live">MVP funcional</span>
+              <span class="badge">Manifest V3</span>
+              <span class="badge">Local first</span>
+            </div>
+
+            <h1>Tu propia capa de memoria sobre cualquier pagina web.</h1>
+
+            <p class="hero__lead">
+              Esta extension convierte una pagina normal en un espacio de trabajo personal: subrayas texto, dejas
+              notas post-it flotantes, vuelves dias despues y todo sigue en su sitio. Pensada para estudiar,
+              investigar, comparar informacion y trabajar con contexto real.
             </p>
 
             <div class="hero__actions">
               <a class="button button--primary" href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">
-                Ver codigo
+                Ver repositorio
               </a>
-              <a class="button button--ghost" href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">
-                Perfil de Edgar-47
-              </a>
+              <a class="button button--secondary" href="#arquitectura">Como la hemos hecho</a>
             </div>
+
+            <ul class="hero__metrics">
+              <li class="metric-card reveal" data-delay="80">
+                <strong data-counter="8">0</strong>
+                <span>colores de resaltado y variaciones</span>
+              </li>
+              <li class="metric-card reveal" data-delay="140">
+                <strong data-counter="4">0</strong>
+                <span>capas tecnicas bien separadas</span>
+              </li>
+              <li class="metric-card reveal" data-delay="200">
+                <strong data-counter="100">0</strong>
+                <span>persistencia local por URL</span>
+              </li>
+            </ul>
           </div>
 
-          <aside class="hero__card">
-            <p class="hero__card-label">Incluye</p>
-            <ul class="hero__list">
-              <li>Subrayado persistente por URL</li>
-              <li>Colores predefinidos y personalizados</li>
-              <li>Notas adhesivas flotantes</li>
-              <li>Arrastre, redimensionado y titulo editable</li>
-              <li>Guardado local con chrome.storage</li>
-            </ul>
-          </aside>
+          <div class="hero__visual reveal" data-tilt>
+            <div class="workspace-window">
+              <div class="workspace-window__chrome">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
+              <div class="workspace-window__content">
+                <div class="workspace-window__toolbar">
+                  <div class="toolbar-pill">Highlight</div>
+                  <div class="toolbar-pill toolbar-pill--warm">Post-it</div>
+                  <div class="toolbar-pill toolbar-pill--dark">Persistencia</div>
+                </div>
+
+                <div class="content-preview">
+                  <div class="preview-text">
+                    <span>Leer contenido web de forma pasiva ya no basta.</span>
+                    <span class="highlight highlight--yellow">Ahora puedes marcar ideas clave</span>
+                    <span>y dejar notas visuales directamente sobre la pagina.</span>
+                    <span class="highlight highlight--blue">Todo queda guardado</span>
+                    <span>para continuar justo donde lo dejaste.</span>
+                  </div>
+
+                  <article class="sticky sticky--yellow">
+                    <header class="sticky__header">
+                      <span>Idea principal</span>
+                      <span class="sticky__dot"></span>
+                    </header>
+                    <p>Comparar competidores y recuperar insight mas tarde.</p>
+                  </article>
+
+                  <article class="sticky sticky--pink">
+                    <header class="sticky__header">
+                      <span>Tarea rapida</span>
+                      <span class="sticky__dot"></span>
+                    </header>
+                    <p>Volver a revisar esta seccion antes de publicar.</p>
+                  </article>
+                </div>
+              </div>
+            </div>
+
+            <div class="floating-chip floating-chip--one">chrome.storage.local</div>
+            <div class="floating-chip floating-chip--two">Popup + Content Script</div>
+          </div>
         </section>
       </header>
 
-      <main class="content-grid">
-        <section class="panel panel--wide">
-          <p class="section-tag">Para que sirve</p>
-          <h2>Una capa personal sobre cualquier pagina web.</h2>
-          <p>
-            La extension esta pensada para personas que investigan, estudian, comparan informacion o simplemente
-            quieren volver a una pagina y encontrar sus ideas justo donde las dejaron. En vez de depender solo de
-            marcadores o capturas, el contenido relevante se mantiene visible sobre la propia web.
-          </p>
-        </section>
+      <main>
+        <section class="section reveal" id="funciones">
+          <div class="section-heading">
+            <p class="section-tag">Que hace</p>
+            <h2>Funciones pensadas para lectura activa y trabajo real.</h2>
+            <p>
+              La extension esta pensada para que la pagina siga siendo la protagonista, pero con una capa adicional
+              de memoria, accion y contexto visual.
+            </p>
+          </div>
 
-        <section class="panel">
-          <p class="section-tag">Funciones</p>
-          <h2>Lo mas importante</h2>
-          <ul class="feature-list">
-            <li>Subrayar texto seleccionado y recuperarlo al volver a la pagina.</li>
-            <li>Cambiar colores y evitar duplicados innecesarios.</li>
-            <li>Crear notas post-it movibles y editables.</li>
-            <li>Guardar texto, color, posicion, tamano e identificador unico.</li>
-            <li>Trabajar en local sin publicar la extension.</li>
-          </ul>
-        </section>
+          <div class="feature-grid">
+            <article class="feature-card reveal" data-delay="50">
+              <span class="feature-card__number">01</span>
+              <h3>Subrayado persistente</h3>
+              <p>Resalta texto seleccionado y recuperalo al volver a la misma pagina sin rehacer el trabajo.</p>
+            </article>
 
-        <section class="panel">
-          <p class="section-tag">Como la hemos hecho</p>
-          <h2>Arquitectura modular para crecer bien.</h2>
-          <p>
-            Se ha construido sobre Manifest V3, separando responsabilidades entre popup, content script, background
-            service worker, almacenamiento y modulos independientes para subrayado y notas. La idea es mantener el
-            proyecto facil de ampliar sin mezclar demasiada logica en un solo archivo.
-          </p>
-        </section>
+            <article class="feature-card reveal" data-delay="110">
+              <span class="feature-card__number">02</span>
+              <h3>Notas post-it flotantes</h3>
+              <p>Coloca recordatorios o comentarios en cualquier punto de la pantalla y sigue editandolos cuando quieras.</p>
+            </article>
 
-        <section class="panel panel--wide">
-          <p class="section-tag">Stack tecnico</p>
-          <h2>Lenguajes y tecnologias utilizadas</h2>
-          <div class="stack-grid">
-            <article class="stack-card">
-              <h3>HTML</h3>
-              <p>Estructura de popup, pagina informativa y base visual de la extension.</p>
+            <article class="feature-card reveal" data-delay="170">
+              <span class="feature-card__number">03</span>
+              <h3>Colores utiles</h3>
+              <p>Usa paletas predefinidas o colores personalizados para diferenciar ideas, tareas y prioridades.</p>
             </article>
-            <article class="stack-card">
-              <h3>CSS</h3>
-              <p>Interfaz visual, sistema de color, layout responsive y apariencia de post-it digital.</p>
-            </article>
-            <article class="stack-card">
-              <h3>TypeScript</h3>
-              <p>Codigo fuente mantenible con tipos claros para highlights, mensajes y notas.</p>
-            </article>
-            <article class="stack-card">
-              <h3>JavaScript</h3>
-              <p>Version ejecutable local usada directamente por la extension cargada en Chrome.</p>
-            </article>
-            <article class="stack-card">
-              <h3>Chrome Extension API</h3>
-              <p>Manifest V3, content scripts, popup, context menus, service worker y storage local.</p>
-            </article>
-            <article class="stack-card">
-              <h3>chrome.storage.local</h3>
-              <p>Persistencia de subrayados, colores, notas, posiciones, tamano y ajustes del usuario.</p>
+
+            <article class="feature-card reveal" data-delay="230">
+              <span class="feature-card__number">04</span>
+              <h3>Persistencia por contexto</h3>
+              <p>El contenido se guarda asociado a la URL y puede evolucionar hacia dominio, cuenta o sincronizacion.</p>
             </article>
           </div>
         </section>
 
-        <section class="panel">
-          <p class="section-tag">Capas</p>
-          <h2>Que hace cada parte</h2>
-          <ul class="feature-list">
-            <li><strong>Popup:</strong> crear resaltados, seleccionar color, crear notas y lanzar acciones.</li>
-            <li><strong>Content script:</strong> pintar highlights y renderizar notas sobre la pagina.</li>
-            <li><strong>Background:</strong> menus contextuales y coordinacion con pestañas.</li>
-            <li><strong>Storage:</strong> persistencia por URL y ajustes de usuario.</li>
-          </ul>
+        <section class="section section--contrast reveal" id="arquitectura">
+          <div class="section-heading">
+            <p class="section-tag">Como la hemos hecho</p>
+            <h2>Arquitectura limpia para crecer sin deuda innecesaria.</h2>
+            <p>
+              El proyecto se ha separado en modulos claros para que cada parte haga solo su trabajo y podamos ampliar
+              funciones sin romper el flujo principal.
+            </p>
+          </div>
+
+          <div class="architecture-grid">
+            <article class="architecture-card reveal" data-delay="40">
+              <span class="architecture-card__label">Popup</span>
+              <h3>Centro de acciones</h3>
+              <p>Desde la popup eliges color, creas notas, ejecutas resaltados y controlas la experiencia principal.</p>
+            </article>
+
+            <article class="architecture-card reveal" data-delay="90">
+              <span class="architecture-card__label">Content Script</span>
+              <h3>Interfaz sobre la pagina</h3>
+              <p>Pinta highlights, renderiza post-it, escucha interacciones y mantiene la capa visual sincronizada.</p>
+            </article>
+
+            <article class="architecture-card reveal" data-delay="140">
+              <span class="architecture-card__label">Background</span>
+              <h3>Coordinacion y menus</h3>
+              <p>Gestiona menus contextuales, mensajes y acciones globales propias de la extension.</p>
+            </article>
+
+            <article class="architecture-card reveal" data-delay="190">
+              <span class="architecture-card__label">Storage</span>
+              <h3>Persistencia local</h3>
+              <p>Guarda highlights, notas, colores, posiciones y preferencias usando la API de almacenamiento.</p>
+            </article>
+          </div>
         </section>
 
-        <section class="panel">
-          <p class="section-tag">Estado del proyecto</p>
-          <h2>Hecho para evolucionar</h2>
-          <p>
-            Aunque funciona como herramienta privada/local, el proyecto ya tiene una base preparada para seguir
-            creciendo: exportacion de datos, autenticacion, sincronizacion, panel lateral o incluso una futura version
-            comercial si se decide publicar.
-          </p>
+        <section class="section reveal" id="tecnologias">
+          <div class="section-heading">
+            <p class="section-tag">Stack tecnico</p>
+            <h2>Lenguajes y tecnologias utilizados</h2>
+            <p>
+              La base es deliberadamente sencilla y mantenible: tecnologia web estandar, buena separacion y cero
+              dependencias innecesarias para la pagina de presentacion.
+            </p>
+          </div>
+
+          <div class="stack-showcase">
+            <article class="stack-panel reveal" data-delay="40">
+              <h3>HTML</h3>
+              <p>Estructura de popup, landing page y elementos base de la experiencia visual.</p>
+            </article>
+            <article class="stack-panel reveal" data-delay="80">
+              <h3>CSS</h3>
+              <p>Sistema visual, estados, responsive, animaciones y estetica moderna para web y extension.</p>
+            </article>
+            <article class="stack-panel reveal" data-delay="120">
+              <h3>TypeScript</h3>
+              <p>Codigo fuente tipado para records, mensajes y logica de highlights y notas.</p>
+            </article>
+            <article class="stack-panel reveal" data-delay="160">
+              <h3>JavaScript</h3>
+              <p>Runtime de la extension y tambien esta landing, compatible con GitHub Pages sin backend.</p>
+            </article>
+            <article class="stack-panel reveal" data-delay="200">
+              <h3>Chrome Extension API</h3>
+              <p>Manifest V3, popup, background, content scripts, context menus y storage local.</p>
+            </article>
+            <article class="stack-panel reveal" data-delay="240">
+              <h3>GitHub</h3>
+              <p>Repositorio, documentacion y punto natural para desplegar esta pagina de forma publica.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <div class="split-panel">
+            <div class="split-panel__copy">
+              <p class="section-tag">Flujo de trabajo</p>
+              <h2>Leer, marcar, anotar y volver mas tarde sin perder nada.</h2>
+              <ol class="journey-list">
+                <li>Seleccionas texto o creas una nota desde la popup o el menu contextual.</li>
+                <li>La extension guarda contenido, color, posicion, tamano y metadatos utiles.</li>
+                <li>Al regresar a la pagina, el sistema intenta restaurar highlights y post-it automaticamente.</li>
+                <li>Puedes editar, recolorear, mover o eliminar contenido cuando quieras.</li>
+              </ol>
+            </div>
+
+            <div class="timeline-card" data-tilt>
+              <div class="timeline-step">
+                <span>1</span>
+                <p>Seleccion del contenido</p>
+              </div>
+              <div class="timeline-step">
+                <span>2</span>
+                <p>Guardado local por URL</p>
+              </div>
+              <div class="timeline-step">
+                <span>3</span>
+                <p>Restauracion automatica</p>
+              </div>
+              <div class="timeline-step">
+                <span>4</span>
+                <p>Edicion continua</p>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
 
-      <footer class="footer">
-        <p>Proyecto desarrollado por Edgar-47.</p>
-        <div class="footer__links">
-          <a href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">github.com/Edgar-47</a>
-          <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">
-            github.com/Edgar-47/Playground
+      <footer class="footer reveal" id="enlaces">
+        <div>
+          <p class="footer__eyebrow">Proyecto desarrollado por Edgar-47</p>
+          <h2>Codigo, idea y evolucion en un mismo sitio.</h2>
+        </div>
+
+        <div class="footer__actions">
+          <a class="button button--primary" href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">
+            Abrir repositorio
           </a>
+          <a class="button button--secondary" href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">
+            Ir a mi GitHub
+          </a>
+        </div>
+
+        <div class="footer__meta">
+          <a href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">github.com/Edgar-47</a>
+          <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">github.com/Edgar-47/Playground</a>
+          <span id="yearLabel">2026</span>
         </div>
       </footer>
     </div>
