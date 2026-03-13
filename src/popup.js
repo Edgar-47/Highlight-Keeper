@@ -138,31 +138,97 @@
   function renderColorGrid(selectedColor) {
     const grid = $("color-grid");
     grid.innerHTML = "";
+    // Si el color seleccionado es extra (ex-*), ningún botón del grid principal queda activo
+    const isExtra = selectedColor && selectedColor.startsWith("ex-");
     ns.COLOR_OPTIONS.forEach(function(color) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "color-cell color-cell--" + color.id + (color.id === selectedColor ? " is-active" : "");
+      btn.className = "color-cell color-cell--" + color.id + (!isExtra && color.id === selectedColor ? " is-active" : "");
       btn.title = color.label;
       btn.dataset.color = color.id;
       btn.innerHTML = '<span class="color-cell__swatch"></span><span class="color-cell__label">' + ns.escapeHtml(color.label) + '</span>';
       btn.addEventListener("click", async function() {
         await storage.saveSettings({ selectedColor: color.id });
         renderColorGrid(color.id);
+        renderExtraColors(color.id); // deselect any extra swatch
       });
       grid.appendChild(btn);
     });
     // custom cell
     const customBtn = document.createElement("button");
     customBtn.type = "button";
-    customBtn.className = "color-cell" + (selectedColor === "custom" ? " is-active" : "");
+    customBtn.className = "color-cell" + (!isExtra && selectedColor === "custom" ? " is-active" : "");
     customBtn.title = "Personalizado";
     customBtn.dataset.color = "custom";
     customBtn.innerHTML = '<span class="color-cell__swatch color-cell__swatch--custom" id="custom-swatch-inline"></span><span class="color-cell__label">Custom</span>';
     customBtn.addEventListener("click", async function() {
       await storage.saveSettings({ selectedColor: "custom" });
       renderColorGrid("custom");
+      renderExtraColors("custom");
     });
     grid.appendChild(customBtn);
+  }
+
+  // ── Sección "Más colores" ──────────────────────────────────────────────────
+  function renderExtraColors(selectedColor) {
+    const panel = $("more-colors-panel");
+    if (!panel) return;
+    panel.innerHTML = "";
+
+    // Agrupar colores por grupo
+    const groups = {};
+    ns.EXTRA_COLOR_OPTIONS.forEach(function(c) {
+      if (!groups[c.group]) groups[c.group] = [];
+      groups[c.group].push(c);
+    });
+
+    Object.keys(groups).forEach(function(groupName) {
+      const groupEl = document.createElement("div");
+      groupEl.className = "extra-color-group";
+
+      const label = document.createElement("p");
+      label.className = "extra-color-group__label";
+      label.textContent = groupName;
+      groupEl.appendChild(label);
+
+      const row = document.createElement("div");
+      row.className = "extra-color-row";
+
+      groups[groupName].forEach(function(color) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "extra-swatch" + (color.id === selectedColor ? " is-active" : "");
+        btn.title = color.label;
+        btn.dataset.color = color.id;
+        btn.style.setProperty("--ex-color", color.hex);
+        btn.addEventListener("click", async function() {
+          await storage.saveSettings({ selectedColor: color.id });
+          renderColorGrid(color.id);
+          renderExtraColors(color.id);
+        });
+        row.appendChild(btn);
+      });
+
+      groupEl.appendChild(row);
+      panel.appendChild(groupEl);
+    });
+  }
+
+  // Toggle "Más colores"
+  function initMoreColorsToggle() {
+    const btn   = $("btn-more-colors");
+    const panel = $("more-colors-panel");
+    if (!btn || !panel) return;
+    btn.addEventListener("click", async function() {
+      const open = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!open));
+      btn.classList.toggle("is-open", !open);
+      panel.hidden = open;
+      if (!open) {
+        const s = await storage.getSettings();
+        renderExtraColors(s.selectedColor);
+      }
+    });
   }
 
   function renderNoteColorGrid(selectedColor) {
@@ -563,6 +629,19 @@
     $("btn-reading-mode").classList.toggle("is-active", settings.readingMode);
     $("custom-color-input").value = settings.customColor;
     renderSettings();
+    initMoreColorsToggle();
+
+    // Si el color guardado es extra, abrir el panel automáticamente
+    if (settings.selectedColor && settings.selectedColor.startsWith("ex-")) {
+      const toggleBtn = $("btn-more-colors");
+      const panel     = $("more-colors-panel");
+      if (toggleBtn && panel) {
+        toggleBtn.setAttribute("aria-expanded", "true");
+        toggleBtn.classList.add("is-open");
+        panel.hidden = false;
+        renderExtraColors(settings.selectedColor);
+      }
+    }
 
     // Custom color preview en vivo
     $("custom-color-input").addEventListener("input", function(e) {
@@ -583,7 +662,14 @@
       try {
         const s = await storage.getSettings();
         await ensureTabReady();
-        const resp = await sendMessage({ type: "APPLY_HIGHLIGHT", color: s.selectedColor, customColor: s.customColor });
+        // Resolver colores extra (ex-*) a custom + hex
+        let finalColor = s.selectedColor;
+        let finalCustom = s.customColor;
+        if (finalColor && finalColor.startsWith("ex-")) {
+          const extraOpt = ns.EXTRA_COLOR_OPTIONS.find(function(o) { return o.id === finalColor; });
+          if (extraOpt) { finalCustom = extraOpt.hex; finalColor = "custom"; }
+        }
+        const resp = await sendMessage({ type: "APPLY_HIGHLIGHT", color: finalColor, customColor: finalCustom });
         if (!resp || !resp.ok) throw new Error(resp ? resp.error : "Sin respuesta.");
         await refresh();
       } catch (err) {

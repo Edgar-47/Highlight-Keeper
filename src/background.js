@@ -98,6 +98,28 @@
     });
   }
 
+  // Colores extra (definidos en types.js, duplicamos los hex aquí para el background)
+  const EXTRA_COLOR_HEX = {
+    "ex-lemon":"#fff176","ex-amber":"#fbbf24","ex-gold":"#d97706","ex-butter":"#fef08a",
+    "ex-rose":"#fb7185","ex-fuchsia":"#e879f9","ex-hotpink":"#f43f5e","ex-salmon":"#fca5a5",
+    "ex-crimson":"#dc2626","ex-coral":"#ff6b6b","ex-peach":"#fdba74","ex-tangerine":"#f97316",
+    "ex-pumpkin":"#ea580c","ex-apricot":"#fb923c","ex-lime":"#a3e635","ex-mint":"#6ee7b7",
+    "ex-emerald":"#10b981","ex-forest":"#16a34a","ex-olive":"#84cc16","ex-sage":"#86efac",
+    "ex-grass":"#4ade80","ex-sky":"#38bdf8","ex-azure":"#3b82f6","ex-indigo":"#6366f1",
+    "ex-navy":"#1e40af","ex-cerulean":"#0ea5e9","ex-cobalt":"#2563eb","ex-ice":"#bae6fd",
+    "ex-violet":"#8b5cf6","ex-lavender":"#c4b5fd","ex-plum":"#7c3aed","ex-grape":"#9333ea",
+    "ex-lilac":"#d8b4fe","ex-slate":"#64748b","ex-stone":"#a8a29e","ex-brown":"#92400e",
+    "ex-tan":"#d4a574","ex-white":"#f8f8f8","ex-charcoal":"#374151",
+    "ex-neon-green":"#39ff14","ex-neon-pink":"#ff10f0","ex-neon-blue":"#00d4ff","ex-neon-yellow":"#ffff00"
+  };
+
+  function resolveColor(selectedColor, customColor) {
+    if (selectedColor && selectedColor.startsWith("ex-")) {
+      return { color: "custom", customColor: EXTRA_COLOR_HEX[selectedColor] || "#facc15" };
+    }
+    return { color: selectedColor, customColor };
+  }
+
   chrome.runtime.onInstalled.addListener(createMenus);
   if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(createMenus);
 
@@ -148,7 +170,8 @@
       if (command === "highlight-selection") {
         const selectedColor = await getSetting("selectedColor", "yellow");
         const customColor   = await getSetting("customColor", "#facc15");
-        await sendToTab(tab.id, { type: "APPLY_HIGHLIGHT", color: selectedColor, customColor });
+        const resolved = resolveColor(selectedColor, customColor);
+        await sendToTab(tab.id, { type: "APPLY_HIGHLIGHT", color: resolved.color, customColor: resolved.customColor });
       }
 
       if (command === "create-note") {
