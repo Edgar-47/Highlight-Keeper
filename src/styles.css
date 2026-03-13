@@ -286,3 +286,36 @@
 .ph-note__body::placeholder {
   color: rgba(0,0,0,0.28);
 }
+
+/* ── Botón flotante de eliminar resaltado (hover) ─────────────────────── */
+.ph-delete-tooltip {
+  position: absolute;
+  z-index: 2147483647;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 8px;
+  background: #1e1e1e;
+  color: #fff;
+  font: 600 11px/1 -apple-system, "Segoe UI", Arial, sans-serif;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08);
+  white-space: nowrap;
+  pointer-events: auto;
+  transition: background 120ms, transform 100ms;
+  transform-origin: bottom left;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+.ph-delete-tooltip:hover {
+  background: #c0392b;
+  transform: scale(1.06);
+}
+
+.ph-delete-tooltip span {
+  font-size: 10px;
+  opacity: 0.75;
+}
