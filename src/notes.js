@@ -77,10 +77,20 @@
     this.container.style.height = height + "px";
   };
 
+  NotesBoard.prototype.createNoteFromText = async function createNoteFromText(color, text) {
+    this.ensureContainer();
+    const note = this.buildNewNote(color);
+    note.text = text || "";
+    note.title = namespace.truncate ? namespace.truncate(text, 40) : (text || "").slice(0, 40);
+    this.renderNote(note);
+    await this.storage.saveNote(note);
+    return note;
+  };
+
   NotesBoard.prototype.buildNewNote = function buildNewNote(color) {
     const existingCount = this.noteElements.size;
-    const width = 280;
-    const height = 230;
+    const width = 290;
+    const height = 240;
     const x = window.scrollX + Math.max(24, Math.min(window.innerWidth - width - 24, 40 + existingCount * 24));
     const y = window.scrollY + Math.max(24, Math.min(window.innerHeight - height - 24, 88 + existingCount * 24));
     const timestamp = new Date().toISOString();
@@ -96,6 +106,8 @@
       width: width,
       height: height,
       isMinimized: false,
+      isFavorite: false,
+      tags: [],
       createdAt: timestamp,
       updatedAt: timestamp
     };
@@ -289,6 +301,7 @@
     noteElement.dataset.height = String(clampedNote.height);
     noteElement.dataset.color = clampedNote.color;
     noteElement.dataset.minimized = String(clampedNote.isMinimized);
+    noteElement.dataset.favorite  = String(Boolean(clampedNote.isFavorite));
     noteElement.classList.toggle("is-minimized", clampedNote.isMinimized);
 
     namespace.NOTE_COLOR_OPTIONS.forEach(function eachColor(option) {
@@ -311,6 +324,8 @@
       width: Number(noteElement.dataset.width || noteElement.offsetWidth || 280),
       height: Number(noteElement.dataset.height || noteElement.offsetHeight || 230),
       isMinimized: noteElement.dataset.minimized === "true",
+      isFavorite:  noteElement.dataset.favorite === "true",
+      tags:        [],
       createdAt: noteElement.dataset.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });

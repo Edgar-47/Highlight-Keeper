@@ -1,160 +1,167 @@
 (function bootstrapBackground() {
-  const colorOptions = [
-    { id: "yellow", label: "Amarillo", circle: "\u{1F7E1}" },
-    { id: "green", label: "Verde", circle: "\u{1F7E2}" },
-    { id: "blue", label: "Azul", circle: "\u{1F535}" },
-    { id: "pink", label: "Rosa", circle: "\u{1FA77}" },
-    { id: "orange", label: "Naranja", circle: "\u{1F7E0}" },
-    { id: "purple", label: "Morado", circle: "\u{1F7E3}" },
-    { id: "teal", label: "Turquesa", circle: "\u{1F539}" },
-    { id: "gray", label: "Gris", circle: "\u26AA" }
+  const COLOR_OPTIONS = [
+    { id: "yellow",  label: "Amarillo",   circle: "🟡" },
+    { id: "green",   label: "Idea clave", circle: "🟢" },
+    { id: "blue",    label: "Info",       circle: "🔵" },
+    { id: "pink",    label: "Rosa",       circle: "🩷" },
+    { id: "orange",  label: "Repasar",    circle: "🟠" },
+    { id: "purple",  label: "Duda",       circle: "🟣" },
+    { id: "teal",    label: "Turquesa",   circle: "🔹" },
+    { id: "red",     label: "Importante", circle: "🔴" },
+    { id: "gray",    label: "Gris",       circle: "⚪" }
   ];
-  const menuRoot = "persistent-highlighter";
-  const settingsKey = "persistent-highlighter.settings";
+
+  const MENU_ROOT   = "annotate";
+  const SETTINGS_KEY = "annotate.settings";
 
   function createMenus() {
-    chrome.contextMenus.removeAll(function onRemoved() {
+    chrome.contextMenus.removeAll(function() {
       chrome.contextMenus.create({
-        id: menuRoot,
-        title: "Resaltador persistente",
+        id: MENU_ROOT,
+        title: "Annotate",
         contexts: ["selection", "page"]
       });
 
-      colorOptions.forEach(function createColorMenu(color) {
+      COLOR_OPTIONS.forEach(function(color) {
         chrome.contextMenus.create({
-          id: menuRoot + ":highlight:" + color.id,
-          parentId: menuRoot,
+          id: MENU_ROOT + ":hl:" + color.id,
+          parentId: MENU_ROOT,
           title: color.circle + " " + color.label,
           contexts: ["selection"]
         });
       });
 
       chrome.contextMenus.create({
-        id: menuRoot + ":highlight:custom",
-        parentId: menuRoot,
-        title: "\u{1F3A8} Ultimo color personalizado",
+        id: MENU_ROOT + ":hl:custom",
+        parentId: MENU_ROOT,
+        title: "🎨 Último color personalizado",
+        contexts: ["selection"]
+      });
+
+      chrome.contextMenus.create({ id: MENU_ROOT + ":sep1", parentId: MENU_ROOT, type: "separator", contexts: ["selection", "page"] });
+
+      chrome.contextMenus.create({
+        id: MENU_ROOT + ":note-from-selection",
+        parentId: MENU_ROOT,
+        title: "📝 Crear nota con selección",
         contexts: ["selection"]
       });
 
       chrome.contextMenus.create({
-        id: menuRoot + ":clear",
-        parentId: menuRoot,
-        title: "Limpiar resaltados de esta pagina",
+        id: MENU_ROOT + ":note",
+        parentId: MENU_ROOT,
+        title: "🗒️ Nueva nota post-it",
         contexts: ["page"]
       });
+
+      chrome.contextMenus.create({ id: MENU_ROOT + ":sep2", parentId: MENU_ROOT, type: "separator", contexts: ["page"] });
 
       chrome.contextMenus.create({
-        id: menuRoot + ":note",
-        parentId: menuRoot,
-        title: "Nueva nota post-it",
+        id: MENU_ROOT + ":clear",
+        parentId: MENU_ROOT,
+        title: "🗑️ Limpiar resaltados de esta página",
         contexts: ["page"]
       });
     });
   }
 
+  // Inyecta CSS y scripts en la pestaña activa si no están ya cargados
   function injectIntoTab(tabId) {
-    return new Promise(function inject(resolve, reject) {
-      chrome.scripting.insertCSS(
-        {
-          target: { tabId: tabId },
-          files: ["src/styles.css"]
-        },
-        function onCssInserted() {
-          chrome.scripting.executeScript(
-            {
-              target: { tabId: tabId },
-              files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js"]
-            },
-            function onScriptsInjected() {
-              if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message));
-                return;
-              }
-
-              resolve();
-            }
-          );
-        }
-      );
+    return new Promise(function(resolve, reject) {
+      chrome.scripting.insertCSS({ target: { tabId }, files: ["src/styles.css"] }, function() {
+        chrome.scripting.executeScript(
+          { target: { tabId }, files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js"] },
+          function() {
+            if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+            resolve();
+          }
+        );
+      });
     });
   }
 
-  async function sendMessageToTab(tabId, message) {
+  async function sendToTab(tabId, message) {
     try {
       await chrome.tabs.sendMessage(tabId, message);
-    } catch (_error) {
+    } catch (_e) {
       await injectIntoTab(tabId);
       await chrome.tabs.sendMessage(tabId, message);
     }
   }
 
-  function getCustomColorSetting() {
-    return new Promise(function resolveColor(resolve) {
-      chrome.storage.local.get([settingsKey], function onSettings(items) {
-        const color =
-          items && items[settingsKey] && typeof items[settingsKey].customColor === "string"
-            ? items[settingsKey].customColor
-            : "#facc15";
-        resolve(color);
+  async function getSetting(key, fallback) {
+    return new Promise(function(resolve) {
+      chrome.storage.local.get([SETTINGS_KEY], function(items) {
+        const s = items && items[SETTINGS_KEY];
+        resolve(s && s[key] !== undefined ? s[key] : fallback);
       });
     });
   }
 
-  function getNoteColorSetting() {
-    return new Promise(function resolveColor(resolve) {
-      chrome.storage.local.get([settingsKey], function onSettings(items) {
-        const color =
-          items && items[settingsKey] && typeof items[settingsKey].noteColor === "string"
-            ? items[settingsKey].noteColor
-            : "yellow";
-        resolve(color);
-      });
-    });
-  }
+  chrome.runtime.onInstalled.addListener(createMenus);
+  if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(createMenus);
 
-  chrome.runtime.onInstalled.addListener(function onInstalled() {
-    createMenus();
-  });
-
-  if (chrome.runtime.onStartup) {
-    chrome.runtime.onStartup.addListener(function onStartup() {
-      createMenus();
-    });
-  }
-
-  chrome.contextMenus.onClicked.addListener(async function onClicked(info, tab) {
-    if (!tab || !tab.id) {
-      return;
-    }
+  // ── Menú contextual ────────────────────────────────────────────────────────
+  chrome.contextMenus.onClicked.addListener(async function(info, tab) {
+    if (!tab || !tab.id) return;
 
     try {
-      if (info.menuItemId === menuRoot + ":clear") {
-        await sendMessageToTab(tab.id, { type: "CLEAR_HIGHLIGHTS" });
+      const mid = info.menuItemId;
+
+      if (mid === MENU_ROOT + ":clear") {
+        await sendToTab(tab.id, { type: "CLEAR_HIGHLIGHTS" });
         return;
       }
 
-      if (info.menuItemId === menuRoot + ":note") {
-        const noteColor = await getNoteColorSetting();
-        await sendMessageToTab(tab.id, { type: "CREATE_NOTE", color: noteColor });
+      if (mid === MENU_ROOT + ":note") {
+        const noteColor = await getSetting("noteColor", "yellow");
+        await sendToTab(tab.id, { type: "CREATE_NOTE", color: noteColor });
         return;
       }
 
-      if (typeof info.menuItemId === "string" && info.menuItemId.indexOf(menuRoot + ":highlight:") === 0) {
-        const color = info.menuItemId.split(":").pop();
+      if (mid === MENU_ROOT + ":note-from-selection") {
+        const noteColor = await getSetting("noteColor", "yellow");
+        await sendToTab(tab.id, { type: "CREATE_NOTE_FROM_SELECTION", color: noteColor });
+        return;
+      }
+
+      if (typeof mid === "string" && mid.startsWith(MENU_ROOT + ":hl:")) {
+        const color = mid.split(":").pop();
         if (color === "custom") {
-          const customColor = await getCustomColorSetting();
-          await sendMessageToTab(tab.id, {
-            type: "APPLY_HIGHLIGHT",
-            color: "custom",
-            customColor: customColor
-          });
-          return;
+          const customColor = await getSetting("customColor", "#facc15");
+          await sendToTab(tab.id, { type: "APPLY_HIGHLIGHT", color: "custom", customColor });
+        } else {
+          await sendToTab(tab.id, { type: "APPLY_HIGHLIGHT", color });
         }
-
-        await sendMessageToTab(tab.id, { type: "APPLY_HIGHLIGHT", color: color });
       }
-    } catch (error) {
-      console.error("PersistentHighlighter: context menu action failed", error);
+    } catch (err) {
+      console.error("Annotate: error en menú contextual", err);
+    }
+  });
+
+  // ── Atajos de teclado (commands) ──────────────────────────────────────────
+  chrome.commands.onCommand.addListener(async function(command) {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.id) return;
+
+    try {
+      if (command === "highlight-selection") {
+        const selectedColor = await getSetting("selectedColor", "yellow");
+        const customColor   = await getSetting("customColor", "#facc15");
+        await sendToTab(tab.id, { type: "APPLY_HIGHLIGHT", color: selectedColor, customColor });
+      }
+
+      if (command === "create-note") {
+        const noteColor = await getSetting("noteColor", "yellow");
+        await sendToTab(tab.id, { type: "CREATE_NOTE", color: noteColor });
+      }
+
+      if (command === "highlight-from-selection") {
+        const noteColor = await getSetting("noteColor", "yellow");
+        await sendToTab(tab.id, { type: "CREATE_NOTE_FROM_SELECTION", color: noteColor });
+      }
+    } catch (err) {
+      console.error("Annotate: error en atajo de teclado", err);
     }
   });
 })();

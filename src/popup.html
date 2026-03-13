@@ -1,70 +1,218 @@
 <!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Persistent Highlighter</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body class="popup-shell">
-    <main class="popup">
-      <section class="hero">
-        <p class="eyebrow">Resaltador Persistente</p>
-        <h1>Guarda lo importante y recuperalo al volver.</h1>
-        <p id="page-url" class="page-url">Cargando pagina...</p>
-      </section>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annotate</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./popup.css" />
+</head>
+<body class="popup-shell">
 
-      <section class="panel">
-        <div class="panel-row">
-          <h2>Color del resaltado</h2>
-          <span class="count-pill count-pill--soft">8</span>
-        </div>
-        <div id="color-options" class="color-list"></div>
-        <div class="custom-color">
-          <div class="custom-color__header">
-            <h3>Color personalizado</h3>
-            <span id="custom-color-preview" class="custom-color__preview"></span>
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="app-header__brand">
+      <span class="app-header__logo">✦</span>
+      <span class="app-header__name">Annotate</span>
+    </div>
+    <div class="app-header__controls">
+      <button id="btn-dark-mode" class="icon-btn" title="Modo oscuro" aria-label="Alternar modo oscuro">☽</button>
+      <button id="btn-reading-mode" class="icon-btn" title="Modo lectura" aria-label="Modo lectura">⊙</button>
+    </div>
+  </header>
+
+  <!-- ── Page context strip ────────────────────────────────────────────── -->
+  <div class="page-strip">
+    <span class="page-strip__dot"></span>
+    <span id="page-url" class="page-strip__url">Cargando…</span>
+  </div>
+
+  <!-- ── Tab nav ───────────────────────────────────────────────────────── -->
+  <nav class="tab-nav">
+    <button class="tab-btn is-active" data-tab="highlights">
+      <span class="tab-btn__icon">◆</span> Resaltados
+      <span id="hl-count-badge" class="tab-badge">0</span>
+    </button>
+    <button class="tab-btn" data-tab="notes">
+      <span class="tab-btn__icon">□</span> Notas
+      <span id="note-count-badge" class="tab-badge tab-badge--soft">0</span>
+    </button>
+    <button class="tab-btn" data-tab="dashboard">
+      <span class="tab-btn__icon">⊞</span> Todo
+    </button>
+    <button class="tab-btn" data-tab="settings">
+      <span class="tab-btn__icon">⚙</span>
+    </button>
+  </nav>
+
+  <main class="tab-content">
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- TAB: HIGHLIGHTS                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="tab-highlights" class="tab-pane is-active">
+
+      <!-- Color picker -->
+      <div class="section-card">
+        <p class="section-label">Color de resaltado</p>
+        <div id="color-grid" class="color-grid"></div>
+
+        <div class="custom-color-row">
+          <input id="custom-color-input" type="color" value="#facc15" class="color-wheel" />
+          <div class="custom-color-preview-wrap">
+            <span id="custom-color-preview" class="custom-preview-swatch"></span>
+            <span class="custom-label">Personalizado</span>
           </div>
-          <div class="custom-color__controls">
-            <input id="custom-color-input" class="custom-color__input" type="color" value="#facc15" />
-            <button id="use-custom-color" class="secondary-button" type="button">Usar este color</button>
+          <button id="btn-use-custom" class="pill-btn">Usar</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="action-row">
+        <button id="btn-highlight" class="primary-btn">
+          <span>✦</span> Resaltar selección
+        </button>
+        <button id="btn-note-from-sel" class="secondary-btn" title="Crear nota con el texto seleccionado">
+          📝
+        </button>
+        <button id="btn-restore" class="secondary-btn" title="Reaplicar resaltados">↺</button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <input id="hl-search" type="search" placeholder="Buscar en resaltados…" class="search-input" />
+      </div>
+
+      <!-- Filter chips -->
+      <div id="hl-filters" class="filter-chips"></div>
+
+      <!-- List -->
+      <div id="highlight-list" class="item-list">
+        <p class="empty-state">Cargando…</p>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="danger-row">
+        <button id="btn-copy-highlights" class="ghost-btn">📋 Copiar todos</button>
+        <button id="btn-clear-page" class="ghost-btn ghost-btn--danger">🗑️ Limpiar página</button>
+      </div>
+
+      <p id="hl-status" class="status-line">Listo.</p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- TAB: NOTES                                                           -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="tab-notes" class="tab-pane">
+
+      <!-- Note color picker -->
+      <div class="section-card">
+        <p class="section-label">Color de nota</p>
+        <div id="note-color-grid" class="note-swatch-row"></div>
+      </div>
+
+      <div class="action-row">
+        <button id="btn-create-note" class="primary-btn">
+          <span>+</span> Nueva nota
+        </button>
+        <button id="btn-copy-notes" class="secondary-btn" title="Copiar todas las notas">📋</button>
+      </div>
+
+      <!-- Notes list from storage -->
+      <div id="note-list" class="item-list">
+        <p class="empty-state">Cargando…</p>
+      </div>
+
+      <p id="note-status" class="status-line">Listo.</p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- TAB: DASHBOARD (all data)                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="tab-dashboard" class="tab-pane">
+      <div class="section-card">
+        <p class="section-label">Resumen de esta página</p>
+        <div id="page-summary" class="summary-grid"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-card__header">
+          <p class="section-label">Todo guardado</p>
+          <div class="dashboard-actions">
+            <button id="btn-export" class="ghost-btn">⬇ Exportar</button>
+            <label id="btn-import-label" class="ghost-btn" style="cursor:pointer;">
+              ⬆ Importar
+              <input id="btn-import" type="file" accept=".json" style="display:none;" />
+            </label>
           </div>
         </div>
+        <div class="search-wrap">
+          <input id="dash-search" type="search" placeholder="Buscar en todo…" class="search-input" />
+        </div>
+        <div id="dashboard-list" class="item-list"></div>
+      </div>
 
-        <div class="actions">
-          <button id="highlight-selection" class="primary-button" type="button">Resaltar seleccion</button>
-          <button id="restore-page" class="secondary-button" type="button">Reaplicar</button>
-          <button id="clear-page" class="secondary-button secondary-button--danger" type="button">Limpiar pagina</button>
-        </div>
-        <p class="helper-text">Consejo: tambien puedes seleccionar texto y usar clic derecho. El menu usa tu ultimo color personalizado.</p>
-        <p id="status" class="status">Listo.</p>
-      </section>
+      <p id="dash-status" class="status-line"></p>
+    </section>
 
-      <section class="panel">
-        <div class="panel-row">
-          <h2>Resaltados guardados</h2>
-          <span id="highlight-count" class="count-pill">0</span>
-        </div>
-        <div id="highlight-list" class="highlight-list">
-          <p class="empty-state">Cargando...</p>
-        </div>
-      </section>
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- TAB: SETTINGS                                                        -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="tab-settings" class="tab-pane">
+      <div class="section-card">
+        <p class="section-label">Atajos de teclado</p>
+        <ul class="shortcut-list">
+          <li><kbd>Alt+H</kbd> Resaltar selección</li>
+          <li><kbd>Alt+N</kbd> Nueva nota</li>
+          <li><kbd>Alt+Q</kbd> Nota desde selección</li>
+          <li><kbd>Alt+Click</kbd> Eliminar resaltado</li>
+        </ul>
+      </div>
 
-      <section class="panel">
-        <div class="panel-row">
-          <h2>Notas adhesivas</h2>
-          <span id="note-count" class="count-pill count-pill--soft">0</span>
-        </div>
-        <div id="note-color-options" class="note-color-list"></div>
-        <div class="actions actions--single">
-          <button id="create-note" class="primary-button" type="button">Crear nota</button>
-        </div>
-        <p class="helper-text">Cada nota guarda titulo, texto, color, posicion y tamano en esta pagina.</p>
-      </section>
-    </main>
+      <div class="section-card">
+        <p class="section-label">Categorías de color</p>
+        <ul class="category-legend" id="category-legend"></ul>
+      </div>
 
-    <script src="./types.js"></script>
-    <script src="./storage.js"></script>
-    <script src="./popup.js"></script>
-  </body>
+      <div class="section-card">
+        <p class="section-label">Datos</p>
+        <div class="action-row action-row--col">
+          <button id="btn-export-settings" class="secondary-btn">⬇ Exportar todo</button>
+          <label class="secondary-btn" style="cursor:pointer;text-align:center;">
+            ⬆ Importar backup
+            <input id="btn-import-settings" type="file" accept=".json" style="display:none;" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Confirmation modal ────────────────────────────────────────────── -->
+  <div id="confirm-modal" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <p id="confirm-message" class="modal-message"></p>
+      <div class="modal-actions">
+        <button id="confirm-cancel" class="secondary-btn">Cancelar</button>
+        <button id="confirm-ok" class="primary-btn primary-btn--danger">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Comment editor modal ─────────────────────────────────────────── -->
+  <div id="comment-modal" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <p class="modal-message">Comentario del resaltado</p>
+      <textarea id="comment-textarea" class="comment-textarea" placeholder="Añade una nota sobre este resaltado…" rows="4"></textarea>
+      <div class="modal-actions">
+        <button id="comment-cancel" class="secondary-btn">Cancelar</button>
+        <button id="comment-save" class="primary-btn">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./types.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./popup.js"></script>
+</body>
 </html>

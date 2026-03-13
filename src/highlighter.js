@@ -227,7 +227,14 @@
       startOffset: range.startOffset,
       endOffset: range.endOffset,
       domHint: domHint,
-      signature: namespace.buildSignature(selectedText, prefix, suffix, domHint)
+      signature: namespace.buildSignature(selectedText, prefix, suffix, domHint),
+      // Campos ampliados
+      comment: "",
+      tags: [],
+      isFavorite: false,
+      category: namespace.COLOR_OPTIONS.find(function(o) { return o.id === color; })
+                  ? (namespace.COLOR_OPTIONS.find(function(o) { return o.id === color; }).category || "general")
+                  : "general"
     };
   };
 

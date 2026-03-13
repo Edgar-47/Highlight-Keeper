@@ -1,107 +1,100 @@
 (function bootstrapContent(global) {
-  if (global.__persistentHighlighterLoaded) {
-    return;
-  }
+  if (global.__annotateLoaded) return;
+  global.__annotateLoaded = true;
 
-  global.__persistentHighlighterLoaded = true;
-  const namespace = global.PersistentHighlighter;
-  const storage = new namespace.HighlightStorage();
-  const renderer = new namespace.HighlightRenderer(storage);
-  const notesBoard = new namespace.NotesBoard(storage);
+  const ns      = global.PersistentHighlighter;
+  const storage = new ns.HighlightStorage();
+  const renderer  = new ns.HighlightRenderer(storage);
+  const notesBoard = new ns.NotesBoard(storage);
 
-  function buildResponse(payload) {
-    return payload;
-  }
-
-  async function handleMessage(message) {
-    switch (message.type) {
+  // ── Manejador central de mensajes ─────────────────────────────────────────
+  async function handleMessage(msg) {
+    switch (msg.type) {
       case "APPLY_HIGHLIGHT": {
-        const record = await renderer.applySelectionHighlight(message.color, message.customColor);
-        return buildResponse({ ok: true, data: { record: record } });
+        const record = await renderer.applySelectionHighlight(msg.color, msg.customColor);
+        return { ok: true, data: { record } };
       }
       case "REMOVE_HIGHLIGHT": {
-        await renderer.removeHighlightById(message.highlightId);
-        return buildResponse({ ok: true, data: { removedId: message.highlightId } });
+        await renderer.removeHighlightById(msg.highlightId);
+        return { ok: true, data: { removedId: msg.highlightId } };
       }
       case "CLEAR_HIGHLIGHTS": {
         const removedCount = await renderer.clearCurrentPage();
-        return buildResponse({ ok: true, data: { removedCount: removedCount } });
+        return { ok: true, data: { removedCount } };
       }
       case "RESTORE_HIGHLIGHTS": {
         const removedCount = await renderer.restoreHighlightsForCurrentPage();
-        return buildResponse({ ok: true, data: { removedCount: removedCount } });
+        return { ok: true, data: { removedCount } };
       }
       case "CREATE_NOTE": {
-        const note = await notesBoard.createNote(message.color);
-        return buildResponse({ ok: true, data: { note: note } });
+        const note = await notesBoard.createNote(msg.color);
+        return { ok: true, data: { note } };
+      }
+      case "CREATE_NOTE_FROM_SELECTION": {
+        // Crea una nota pre-rellenada con el texto seleccionado
+        const sel  = window.getSelection();
+        const text = sel ? ns.normalizeText(sel.toString()) : "";
+        const note = text
+          ? await notesBoard.createNoteFromText(msg.color, text)
+          : await notesBoard.createNote(msg.color);
+        return { ok: true, data: { note } };
       }
       case "RESTORE_NOTES": {
         const removedCount = await notesBoard.restoreNotesForCurrentPage();
-        return buildResponse({ ok: true, data: { removedCount: removedCount } });
+        return { ok: true, data: { removedCount } };
+      }
+      case "PATCH_HIGHLIGHT": {
+        const updated = await storage.patchHighlight(window.location.href, msg.highlightId, msg.patch);
+        return { ok: true, data: { updated } };
       }
       default:
-        return buildResponse({ ok: false, error: "Unsupported message type." });
+        return { ok: false, error: "Tipo de mensaje no soportado." };
     }
   }
 
-  chrome.runtime.onMessage.addListener(function onMessage(message, _sender, sendResponse) {
-    handleMessage(message)
-      .then(function sendSuccess(response) {
-        sendResponse(response);
-      })
-      .catch(function sendFailure(error) {
-        sendResponse(
-          buildResponse({
-            ok: false,
-            error: error instanceof Error ? error.message : "Unknown content-script error."
-          })
-        );
+  chrome.runtime.onMessage.addListener(function(msg, _sender, sendResponse) {
+    handleMessage(msg)
+      .then(sendResponse)
+      .catch(function(err) {
+        sendResponse({ ok: false, error: err instanceof Error ? err.message : "Error desconocido." });
       });
-
-    return true;
+    return true; // respuesta asíncrona
   });
 
-  document.addEventListener("click", async function onClick(event) {
+  // ── Alt+Click para eliminar resaltado ─────────────────────────────────────
+  document.addEventListener("click", async function(event) {
     const target = event.target;
-    const highlight = target && typeof target.closest === "function"
-      ? target.closest("." + namespace.HIGHLIGHT_CLASS)
+    const hl = target && typeof target.closest === "function"
+      ? target.closest("." + ns.HIGHLIGHT_CLASS)
       : null;
-
-    if (!highlight || !event.altKey) {
-      return;
-    }
+    if (!hl || !event.altKey) return;
 
     event.preventDefault();
     event.stopPropagation();
 
-    const highlightId = highlight.getAttribute(namespace.HIGHLIGHT_ATTR);
-    if (!highlightId) {
-      return;
-    }
+    const id = hl.getAttribute(ns.HIGHLIGHT_ATTR);
+    if (!id) return;
 
     try {
-      await renderer.removeHighlightById(highlightId);
-    } catch (error) {
-      console.error("PersistentHighlighter: failed to remove highlight", error);
+      await renderer.removeHighlightById(id);
+    } catch (err) {
+      console.error("Annotate: no se pudo eliminar el resaltado", err);
     }
   });
 
-  document.addEventListener("mouseup", function rememberSelectionOnMouseup() {
-    renderer.rememberCurrentSelection();
-  });
+  // ── Recordar selección activa para uso desde popup ────────────────────────
+  document.addEventListener("mouseup",  () => renderer.rememberCurrentSelection());
+  document.addEventListener("keyup",    () => renderer.rememberCurrentSelection());
 
-  document.addEventListener("keyup", function rememberSelectionOnKeyup() {
-    renderer.rememberCurrentSelection();
-  });
-
+  // ── Bootstrap: restaurar resaltados y notas al cargar ────────────────────
   async function bootstrap() {
     try {
       await renderer.restoreHighlightsForCurrentPage();
       await notesBoard.restoreNotesForCurrentPage();
       renderer.observeDynamicContent();
       notesBoard.observeViewport();
-    } catch (error) {
-      console.error("PersistentHighlighter: bootstrap failed", error);
+    } catch (err) {
+      console.error("Annotate: error en bootstrap", err);
     }
   }
 
