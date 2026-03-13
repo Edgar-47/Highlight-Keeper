@@ -28,7 +28,7 @@ namespace PersistentHighlighter {
           continue;
         }
 
-        this.renderNote(this.clampNoteToDocument(note));
+        this.renderNote(this.normalizeNote(this.clampNoteToDocument(note)));
         restoredCount += 1;
       }
 
@@ -66,6 +66,7 @@ namespace PersistentHighlighter {
         return;
       }
 
+      // La capa ocupa todo el documento para poder mover notas fuera del viewport actual.
       const width = Math.max(document.documentElement.scrollWidth, window.innerWidth);
       const height = Math.max(document.documentElement.scrollHeight, window.innerHeight);
       this.container.style.width = `${width}px`;
@@ -105,8 +106,8 @@ namespace PersistentHighlighter {
       noteElement.innerHTML = `
         <header class="ph-note__header">
           <div class="ph-note__header-main">
-            <span class="ph-note__drag">Mover</span>
-            <input class="ph-note__title" type="text" value="" aria-label="Nombre de la nota" />
+            <span class="ph-note__drag" aria-hidden="true">Mover</span>
+            <input class="ph-note__title" type="text" value="" aria-label="Nombre de la nota" placeholder="Titulo de la nota" />
           </div>
           <div class="ph-note__actions">
             <button class="ph-note__icon-button" data-action="minimize" type="button" aria-label="Minimizar">_</button>
@@ -186,9 +187,9 @@ namespace PersistentHighlighter {
         this.scheduleSave(nextNote);
       });
 
-      const dragHandle = noteElement.querySelector<HTMLElement>(".ph-note__drag");
+      const dragHandle = noteElement.querySelector<HTMLElement>(".ph-note__header");
       dragHandle?.addEventListener("pointerdown", (event) => {
-        if ((event.target as HTMLElement).closest("button, input")) {
+        if ((event.target as HTMLElement).closest("button, input, textarea")) {
           return;
         }
 
@@ -276,7 +277,7 @@ namespace PersistentHighlighter {
     private readNoteFromElement(noteElement: HTMLElement, noteId: string): PostItNote {
       const titleInput = noteElement.querySelector<HTMLInputElement>(".ph-note__title");
       const textarea = noteElement.querySelector<HTMLTextAreaElement>(".ph-note__textarea");
-      return {
+      return this.normalizeNote({
         id: noteId,
         url: normalizeUrl(window.location.href),
         title: titleInput?.value || "Nueva nota",
@@ -289,12 +290,13 @@ namespace PersistentHighlighter {
         isMinimized: noteElement.dataset.minimized === "true",
         createdAt: noteElement.dataset.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      };
+      });
     }
 
     private scheduleSave(note: PostItNote): void {
       window.clearTimeout(this.saveTimers.get(note.id));
       const timerId = window.setTimeout(() => {
+        // Agrupamos cambios rapidos para no escribir en storage en cada tecla o pixel.
         void this.storage.saveNote(this.clampNoteToDocument(note));
       }, 180);
       this.saveTimers.set(note.id, timerId);
@@ -315,6 +317,18 @@ namespace PersistentHighlighter {
         y: Math.max(8, Math.min(note.y, maxY)),
         width,
         height
+      };
+    }
+
+    private normalizeNote(note: PostItNote): PostItNote {
+      return {
+        ...note,
+        title: note.title?.trim() || "Nueva nota",
+        text: note.text || "",
+        width: Number.isFinite(note.width) ? note.width : 280,
+        height: Number.isFinite(note.height) ? note.height : 230,
+        x: Number.isFinite(note.x) ? note.x : window.scrollX + 40,
+        y: Number.isFinite(note.y) ? note.y : window.scrollY + 88
       };
     }
   }

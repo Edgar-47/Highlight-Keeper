@@ -27,7 +27,7 @@
         continue;
       }
 
-      this.renderNote(this.clampNoteToDocument(note));
+      this.renderNote(this.normalizeNote(this.clampNoteToDocument(note)));
       restoredCount += 1;
     }
 
@@ -70,6 +70,7 @@
       return;
     }
 
+    // La capa ocupa todo el documento para poder mover notas fuera del viewport actual.
     const width = Math.max(document.documentElement.scrollWidth, window.innerWidth);
     const height = Math.max(document.documentElement.scrollHeight, window.innerHeight);
     this.container.style.width = width + "px";
@@ -109,8 +110,8 @@
     noteElement.innerHTML =
       '<header class="ph-note__header">' +
       '<div class="ph-note__header-main">' +
-      '<span class="ph-note__drag">Mover</span>' +
-      '<input class="ph-note__title" type="text" value="" aria-label="Nombre de la nota" />' +
+      '<span class="ph-note__drag" aria-hidden="true">Mover</span>' +
+      '<input class="ph-note__title" type="text" value="" aria-label="Nombre de la nota" placeholder="Titulo de la nota" />' +
       "</div>" +
       '<div class="ph-note__actions">' +
       '<button class="ph-note__icon-button" data-action="minimize" type="button" aria-label="Minimizar">_</button>' +
@@ -204,11 +205,11 @@
       }.bind(this)
     );
 
-    const dragHandle = noteElement.querySelector(".ph-note__drag");
+    const dragHandle = noteElement.querySelector(".ph-note__header");
     dragHandle.addEventListener(
       "pointerdown",
       function onPointerDown(event) {
-        if (event.target.closest("button, input")) {
+        if (event.target.closest("button, input, textarea")) {
           return;
         }
 
@@ -299,7 +300,7 @@
   NotesBoard.prototype.readNoteFromElement = function readNoteFromElement(noteElement, noteId) {
     const titleInput = noteElement.querySelector(".ph-note__title");
     const textarea = noteElement.querySelector(".ph-note__textarea");
-    return {
+    return this.normalizeNote({
       id: noteId,
       url: namespace.normalizeUrl(window.location.href),
       title: titleInput ? titleInput.value : "Nueva nota",
@@ -312,13 +313,14 @@
       isMinimized: noteElement.dataset.minimized === "true",
       createdAt: noteElement.dataset.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    };
+    });
   };
 
   NotesBoard.prototype.scheduleSave = function scheduleSave(note) {
     window.clearTimeout(this.saveTimers.get(note.id));
     const timerId = window.setTimeout(
       function persistLater() {
+        // Agrupamos cambios rapidos para no escribir en storage en cada tecla o pixel.
         void this.storage.saveNote(this.clampNoteToDocument(note));
       }.bind(this),
       180
@@ -340,6 +342,17 @@
       y: Math.max(8, Math.min(note.y, maxY)),
       width: width,
       height: height
+    });
+  };
+
+  NotesBoard.prototype.normalizeNote = function normalizeNote(note) {
+    return Object.assign({}, note, {
+      title: note.title && String(note.title).trim() ? String(note.title).trim() : "Nueva nota",
+      text: note.text || "",
+      width: Number.isFinite(note.width) ? note.width : 280,
+      height: Number.isFinite(note.height) ? note.height : 230,
+      x: Number.isFinite(note.x) ? note.x : window.scrollX + 40,
+      y: Number.isFinite(note.y) ? note.y : window.scrollY + 88
     });
   };
 

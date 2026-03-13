@@ -39,6 +39,7 @@ namespace PersistentHighlighter {
   export interface PostItNote {
     id: string;
     url: string;
+    title: string;
     text: string;
     color: NoteColor;
     x: number;

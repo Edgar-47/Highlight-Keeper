@@ -70,7 +70,9 @@ namespace PersistentHighlighterPopup {
     }
 
     try {
+      // Rehidratamos ambos modulos para dejar la pestana lista aunque se abriese antes de cargar la extension.
       await sendMessageToActiveTab({ type: "RESTORE_HIGHLIGHTS" });
+      await sendMessageToActiveTab({ type: "RESTORE_NOTES" });
     } catch (_error) {
       await injectIntoTab(currentTab.id);
     }
@@ -206,6 +208,7 @@ namespace PersistentHighlighterPopup {
     status.textContent = "Trabajando...";
 
     try {
+      // Centralizamos el feedback para que todas las acciones sigan el mismo flujo.
       await action();
       await refresh();
     } catch (error) {
