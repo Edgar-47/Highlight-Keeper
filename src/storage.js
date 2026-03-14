@@ -224,9 +224,17 @@
 
   HighlightStorage.prototype._get = function _get(keys) {
     return new Promise(function(resolve, reject) {
+      // Si el contexto de la extensión fue invalidado (p.ej. tras recargarla),
+      // devolvemos un objeto vacío en lugar de lanzar un error.
+      try {
+        if (!chrome.runtime || !chrome.runtime.id) return resolve({});
+      } catch (_e) { return resolve({}); }
+
       chrome.storage.local.get(keys, function(items) {
         if (chrome.runtime.lastError) {
-          return reject(new Error(chrome.runtime.lastError.message));
+          const msg = chrome.runtime.lastError.message || "";
+          if (msg.includes("Extension context invalidated")) return resolve({});
+          return reject(new Error(msg));
         }
         resolve(items);
       });
@@ -235,9 +243,15 @@
 
   HighlightStorage.prototype._set = function _set(items) {
     return new Promise(function(resolve, reject) {
+      try {
+        if (!chrome.runtime || !chrome.runtime.id) return resolve();
+      } catch (_e) { return resolve(); }
+
       chrome.storage.local.set(items, function() {
         if (chrome.runtime.lastError) {
-          return reject(new Error(chrome.runtime.lastError.message));
+          const msg = chrome.runtime.lastError.message || "";
+          if (msg.includes("Extension context invalidated")) return resolve();
+          return reject(new Error(msg));
         }
         resolve();
       });
