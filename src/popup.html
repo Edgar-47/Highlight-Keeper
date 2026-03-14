@@ -16,6 +16,7 @@
       <span class="app-header__name">Annotate</span>
     </div>
     <div class="app-header__controls">
+      <button id="btn-sidebar" class="icon-btn" title="Panel lateral en página" aria-label="Abrir panel lateral">⊟</button>
       <button id="btn-dark-mode" class="icon-btn" title="Modo oscuro" aria-label="Alternar modo oscuro">☽</button>
       <button id="btn-reading-mode" class="icon-btn" title="Modo lectura" aria-label="Modo lectura">⊙</button>
     </div>
@@ -37,8 +38,14 @@
       <span class="tab-btn__icon">□</span> Notas
       <span id="note-count-badge" class="tab-badge tab-badge--soft">0</span>
     </button>
+    <button class="tab-btn" data-tab="organize">
+      <span class="tab-btn__icon">🏷</span> Tags
+    </button>
+    <button class="tab-btn" data-tab="study">
+      <span class="tab-btn__icon">🎓</span>
+    </button>
     <button class="tab-btn" data-tab="dashboard">
-      <span class="tab-btn__icon">⊞</span> Todo
+      <span class="tab-btn__icon">⊞</span>
     </button>
     <button class="tab-btn" data-tab="settings">
       <span class="tab-btn__icon">⚙</span>
@@ -136,6 +143,125 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- TAB: ORGANIZE (tags & folders)                                       -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="tab-organize" class="tab-pane">
+
+      <!-- Tag manager -->
+      <div class="section-card">
+        <p class="section-label">Carpetas / Etiquetas</p>
+        <div class="tag-input-row">
+          <input id="tag-input" type="text" placeholder="Nueva etiqueta… ej. IA, tesis, ideas" class="search-input" maxlength="32" />
+          <button id="btn-add-tag" class="pill-btn">+ Añadir</button>
+        </div>
+        <div id="tag-cloud" class="tag-cloud"></div>
+      </div>
+
+      <!-- Highlights with tag management -->
+      <div class="section-card">
+        <p class="section-label">Resaltados por etiqueta</p>
+        <div class="search-wrap">
+          <input id="org-search" type="search" placeholder="Buscar…" class="search-input" />
+        </div>
+        <div id="org-filter-chips" class="filter-chips" style="margin-bottom:8px;"></div>
+        <div id="org-hl-list" class="item-list">
+          <p class="empty-state">Cargando…</p>
+        </div>
+      </div>
+
+      <p id="org-status" class="status-line"></p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- TAB: STUDY (flashcards + export)                                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="tab-study" class="tab-pane">
+
+      <!-- Export section -->
+      <div class="section-card">
+        <p class="section-label">Exportar página actual</p>
+        <div class="export-grid">
+          <button id="btn-export-md"  class="export-card">
+            <span class="export-card__icon">Md</span>
+            <span class="export-card__label">Markdown</span>
+          </button>
+          <button id="btn-export-txt" class="export-card">
+            <span class="export-card__icon">Txt</span>
+            <span class="export-card__label">Texto</span>
+          </button>
+          <button id="btn-export-json-page" class="export-card">
+            <span class="export-card__icon">{}</span>
+            <span class="export-card__label">JSON</span>
+          </button>
+          <button id="btn-export-all-md" class="export-card">
+            <span class="export-card__icon">⊞</span>
+            <span class="export-card__label">Todo MD</span>
+          </button>
+        </div>
+        <p id="export-status" class="status-line" style="margin-top:6px;"></p>
+      </div>
+
+      <!-- Flashcard section -->
+      <div class="section-card">
+        <p class="section-label">Modo estudio — Flashcards</p>
+
+        <!-- Config view -->
+        <div id="fc-config" class="">
+          <div class="fc-config-row">
+            <label class="fc-field-label">Color/categoría</label>
+            <select id="fc-color-filter" class="fc-select">
+              <option value="all">Todos los colores</option>
+              <option value="green">🟢 Idea clave</option>
+              <option value="blue">🔵 Info</option>
+              <option value="purple">🟣 Duda</option>
+              <option value="orange">🟠 Repasar</option>
+              <option value="red">🔴 Importante</option>
+              <option value="yellow">🟡 Amarillo</option>
+            </select>
+          </div>
+          <div class="fc-config-row">
+            <label class="fc-field-label">Modo</label>
+            <select id="fc-mode" class="fc-select">
+              <option value="recall">Recordar (ver texto oculto)</option>
+              <option value="qa">Pregunta → Respuesta (usa comentario)</option>
+            </select>
+          </div>
+          <button id="btn-start-fc" class="primary-btn" style="width:100%;margin-top:10px;">
+            🎓 Empezar flashcards
+          </button>
+          <p id="fc-status" class="status-line" style="margin-top:6px;"></p>
+        </div>
+
+        <!-- Active flashcard view -->
+        <div id="fc-active" hidden>
+          <div class="fc-progress-row">
+            <span id="fc-progress-text" class="fc-progress-text">1 / 1</span>
+            <div class="fc-progress-bar"><div id="fc-progress-fill" class="fc-progress-fill" style="width:0%"></div></div>
+          </div>
+
+          <div id="fc-card" class="fc-card">
+            <div id="fc-card-front" class="fc-card__face fc-card__front">
+              <p class="fc-card__label" id="fc-front-label">Fragmento</p>
+              <p class="fc-card__text" id="fc-front-text"></p>
+            </div>
+            <div id="fc-card-back" class="fc-card__face fc-card__back" hidden>
+              <p class="fc-card__label">Respuesta</p>
+              <p class="fc-card__text" id="fc-back-text"></p>
+            </div>
+          </div>
+
+          <div class="fc-btn-row">
+            <button id="fc-btn-flip" class="primary-btn" style="flex:2;">Voltear ↩</button>
+            <button id="fc-btn-prev" class="secondary-btn" style="flex:1;">‹</button>
+            <button id="fc-btn-next" class="secondary-btn" style="flex:1;">›</button>
+          </div>
+          <button id="fc-btn-stop" class="ghost-btn" style="width:100%;margin-top:6px;">✕ Terminar</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- TAB: DASHBOARD (all data)                                            -->
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <section id="tab-dashboard" class="tab-pane">
@@ -216,6 +342,22 @@
       <div class="modal-actions">
         <button id="comment-cancel" class="secondary-btn">Cancelar</button>
         <button id="comment-save" class="primary-btn">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tag editor modal ─────────────────────────────────────────────── -->
+  <div id="tag-modal" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <p class="modal-message">Editar etiquetas del resaltado</p>
+      <p id="tag-modal-text" class="hl-row__comment" style="margin-bottom:8px;"></p>
+      <div class="tag-input-row">
+        <input id="tag-modal-input" type="text" placeholder="Nueva etiqueta…" class="comment-textarea" style="height:38px;resize:none;padding:8px 12px;" maxlength="32" />
+        <button id="tag-modal-add" class="primary-btn" style="white-space:nowrap;">+ Añadir</button>
+      </div>
+      <div id="tag-modal-chips" class="tag-cloud" style="margin-top:8px;"></div>
+      <div class="modal-actions">
+        <button id="tag-modal-close" class="secondary-btn">Cerrar</button>
       </div>
     </div>
   </div>

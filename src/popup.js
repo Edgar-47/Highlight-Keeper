@@ -565,7 +565,449 @@
   // EXPORT / IMPORT
   // ═══════════════════════════════════════════════════════════
 
-  async function exportData() {
+  // ═══════════════════════════════════════════════════════════
+  // TAB: ORGANIZE — Tags & Folders
+  // ═══════════════════════════════════════════════════════════
+
+  let orgSearch = "";
+  let orgFilter = "all";
+
+  async function initOrganize() {
+    const tab = document.querySelector('[data-tab="organize"]');
+    if (!tab) return;
+    tab.addEventListener("click", refreshOrganize);
+
+    $("btn-add-tag").addEventListener("click", async function() {
+      const input = $("tag-input");
+      const tag   = input.value.trim();
+      if (!tag) return;
+      input.value = "";
+      await addGlobalTag(tag);
+      await refreshOrganize();
+    });
+
+    $("tag-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") $("btn-add-tag").click();
+    });
+
+    $("org-search").addEventListener("input", function(e) {
+      orgSearch = e.target.value.trim();
+      refreshOrgList();
+    });
+  }
+
+  async function getAllTags() {
+    const s = await storage.getSettings();
+    return Array.isArray(s.globalTags) ? s.globalTags : [];
+  }
+
+  async function addGlobalTag(tag) {
+    const s = await storage.getSettings();
+    const tags = Array.isArray(s.globalTags) ? s.globalTags : [];
+    if (!tags.includes(tag)) tags.push(tag);
+    await storage.saveSettings({ globalTags: tags });
+  }
+
+  async function removeGlobalTag(tag) {
+    const s = await storage.getSettings();
+    const tags = (Array.isArray(s.globalTags) ? s.globalTags : []).filter(function(t) { return t !== tag; });
+    await storage.saveSettings({ globalTags: tags });
+  }
+
+  async function refreshTagCloud() {
+    const tags    = await getAllTags();
+    const cloud   = $("tag-cloud");
+    cloud.innerHTML = "";
+
+    if (!tags.length) {
+      cloud.innerHTML = '<p style="font-size:12px;color:var(--ink-3);">Sin etiquetas aún.</p>';
+      return;
+    }
+
+    tags.forEach(function(tag) {
+      const chip = document.createElement("span");
+      chip.className = "tag-chip tag-chip--manage" + (orgFilter === tag ? " is-active" : "");
+      chip.innerHTML =
+        '<span class="tag-chip__label">' + ns.escapeHtml(tag) + '</span>' +
+        '<button class="tag-chip__del" data-tag="' + ns.escapeHtml(tag) + '" title="Eliminar etiqueta">✕</button>';
+
+      chip.querySelector(".tag-chip__label").addEventListener("click", function() {
+        orgFilter = (orgFilter === tag) ? "all" : tag;
+        refreshTagCloud();
+        refreshOrgList();
+      });
+
+      chip.querySelector(".tag-chip__del").addEventListener("click", async function() {
+        await removeGlobalTag(tag);
+        if (orgFilter === tag) orgFilter = "all";
+        await refreshOrganize();
+      });
+
+      cloud.appendChild(chip);
+    });
+
+    // "Todos" chip
+    const allChip = document.createElement("span");
+    allChip.className = "tag-chip tag-chip--manage" + (orgFilter === "all" ? " is-active" : "");
+    allChip.innerHTML = '<span class="tag-chip__label">Todos</span>';
+    allChip.querySelector(".tag-chip__label").addEventListener("click", function() {
+      orgFilter = "all";
+      refreshTagCloud();
+      refreshOrgList();
+    });
+    cloud.insertBefore(allChip, cloud.firstChild);
+  }
+
+  let _orgHighlights = [];
+
+  async function refreshOrgList() {
+    const list = $("org-hl-list");
+    if (!currentTab) {
+      list.innerHTML = '<p class="empty-state">Abre una página web.</p>';
+      return;
+    }
+
+    let items = _orgHighlights.slice();
+
+    if (orgFilter !== "all") {
+      items = items.filter(function(h) { return (h.tags || []).includes(orgFilter); });
+    }
+
+    if (orgSearch) {
+      const q = orgSearch.toLowerCase();
+      items = items.filter(function(h) {
+        return h.selectedText.toLowerCase().includes(q) ||
+               (h.tags || []).some(function(t) { return t.toLowerCase().includes(q); });
+      });
+    }
+
+    // Filter chips
+    const chips = $("org-filter-chips");
+    chips.innerHTML = "";
+    const allTags = await getAllTags();
+    if (allTags.length) {
+      function fchip(id, label) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "filter-chip" + (orgFilter === id ? " is-active" : "");
+        b.textContent = label;
+        b.addEventListener("click", function() { orgFilter = id; refreshOrgList(); });
+        chips.appendChild(b);
+      }
+      fchip("all", "Todos");
+      fchip("untagged", "Sin tag");
+      allTags.forEach(function(t) { fchip(t, t); });
+    }
+
+    if (!items.length) {
+      list.innerHTML = '<p class="empty-state">Sin resaltados' + (orgFilter !== "all" ? ' con la etiqueta "' + ns.escapeHtml(orgFilter) + '"' : "") + '.</p>';
+      return;
+    }
+
+    list.innerHTML = "";
+    items.forEach(function(record) {
+      const row = document.createElement("div");
+      row.className = "hl-row";
+      const chipStyle = record.customColor ? ' style="background:' + record.customColor + '"' : "";
+      const tagsHtml  = (record.tags || []).map(function(t) {
+        return '<span class="tag-chip">' + ns.escapeHtml(t) + '</span>';
+      }).join("");
+      row.innerHTML =
+        '<div class="hl-row__left"><span class="color-dot ' + (record.customColor ? "" : "color-dot--" + record.color) + '"' + chipStyle + '></span></div>' +
+        '<div class="hl-row__body">' +
+          '<p class="hl-row__text">' + ns.escapeHtml(ns.truncate(record.selectedText, 100)) + '</p>' +
+          (tagsHtml ? '<div class="hl-row__tags">' + tagsHtml + '</div>' : '<p class="hl-row__meta" style="font-style:italic;">Sin etiquetas</p>') +
+        '</div>' +
+        '<div class="hl-row__actions">' +
+          '<button class="icon-action" data-action="edit-tags" title="Editar etiquetas">🏷</button>' +
+        '</div>';
+
+      row.querySelector('[data-action="edit-tags"]').addEventListener("click", function() {
+        openTagModal(record);
+      });
+
+      list.appendChild(row);
+    });
+  }
+
+  async function refreshOrganize() {
+    if (!currentTab) return;
+    _orgHighlights = await storage.getHighlights(currentTab.url);
+    await refreshTagCloud();
+    await refreshOrgList();
+  }
+
+  // ── Tag editor modal ──────────────────────────────────────────────────────
+
+  let _tagModalRecord = null;
+
+  async function openTagModal(record) {
+    _tagModalRecord = record;
+    $("tag-modal-text").textContent = '"' + ns.truncate(record.selectedText, 60) + '"';
+    $("tag-modal").hidden = false;
+    $("tag-modal-input").value = "";
+    $("tag-modal-input").focus();
+    renderTagModalChips(record.tags || []);
+  }
+
+  function renderTagModalChips(tags) {
+    const container = $("tag-modal-chips");
+    container.innerHTML = "";
+    tags.forEach(function(tag) {
+      const chip = document.createElement("span");
+      chip.className = "tag-chip tag-chip--manage";
+      chip.innerHTML =
+        '<span class="tag-chip__label">' + ns.escapeHtml(tag) + '</span>' +
+        '<button class="tag-chip__del" title="Quitar">✕</button>';
+      chip.querySelector(".tag-chip__del").addEventListener("click", async function() {
+        const next = ((_tagModalRecord.tags || []).filter(function(t) { return t !== tag; }));
+        _tagModalRecord = Object.assign({}, _tagModalRecord, { tags: next });
+        await storage.patchHighlight(currentTab.url, _tagModalRecord.id, { tags: next });
+        renderTagModalChips(next);
+        await refreshOrganize();
+      });
+      container.appendChild(chip);
+    });
+    if (!tags.length) container.innerHTML = '<p style="font-size:12px;color:var(--ink-3);">Sin etiquetas.</p>';
+  }
+
+  async function addTagToModalRecord(tag) {
+    if (!tag || !_tagModalRecord) return;
+    const current = _tagModalRecord.tags || [];
+    if (current.includes(tag)) return;
+    const next = current.concat([tag]);
+    _tagModalRecord = Object.assign({}, _tagModalRecord, { tags: next });
+    await storage.patchHighlight(currentTab.url, _tagModalRecord.id, { tags: next });
+    await addGlobalTag(tag);
+    renderTagModalChips(next);
+    await refreshOrganize();
+  }
+
+  function initTagModal() {
+    $("tag-modal-close").addEventListener("click", function() { $("tag-modal").hidden = true; });
+    $("tag-modal-add").addEventListener("click", async function() {
+      const tag = $("tag-modal-input").value.trim();
+      if (!tag) return;
+      $("tag-modal-input").value = "";
+      await addTagToModalRecord(tag);
+    });
+    $("tag-modal-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") $("tag-modal-add").click();
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB: STUDY — Flashcards + Export
+  // ═══════════════════════════════════════════════════════════
+
+  let _fcCards  = [];
+  let _fcIdx    = 0;
+  let _fcFlipped = false;
+
+  function initStudyTab() {
+    const tab = document.querySelector('[data-tab="study"]');
+    if (!tab) return;
+
+    // Export buttons
+    $("btn-export-md").addEventListener("click", function()        { exportFormatted("md"); });
+    $("btn-export-txt").addEventListener("click", function()       { exportFormatted("txt"); });
+    $("btn-export-json-page").addEventListener("click", function() { exportFormatted("json"); });
+    $("btn-export-all-md").addEventListener("click", function()    { exportAll("md"); });
+
+    // Flashcard start
+    $("btn-start-fc").addEventListener("click", startFlashcards);
+    $("fc-btn-stop").addEventListener("click",  stopFlashcards);
+    $("fc-btn-flip").addEventListener("click",  flipCard);
+    $("fc-btn-next").addEventListener("click",  function() { if (_fcIdx < _fcCards.length - 1) { _fcIdx++; showCard(); } });
+    $("fc-btn-prev").addEventListener("click",  function() { if (_fcIdx > 0) { _fcIdx--; showCard(); } });
+  }
+
+  async function exportFormatted(fmt) {
+    if (!currentTab) return setStatus("export-status", "Sin página activa.", true);
+    const hl    = await storage.getHighlights(currentTab.url);
+    const notes = await storage.getNotes(currentTab.url);
+    const title = document.title || currentTab.url;
+    const date  = new Date().toLocaleString("es-ES");
+    let content = "";
+
+    if (fmt === "md") {
+      content  = "# " + title + "\n\n";
+      content += "> " + currentTab.url + "\n> Exportado: " + date + "\n\n";
+      if (hl.length) {
+        content += "## Resaltados\n\n";
+        hl.forEach(function(h, i) {
+          const cat = (ns.COLOR_OPTIONS.find(function(c) { return c.id === h.color; }) || {}).label || h.color;
+          content += (i + 1) + ". **[" + cat + "]** " + h.selectedText + "\n";
+          if (h.comment) content += "   > 💬 " + h.comment + "\n";
+          if (h.tags && h.tags.length) content += "   *🏷 " + h.tags.join(", ") + "*\n";
+          content += "\n";
+        });
+      }
+      if (notes.length) {
+        content += "## Notas\n\n";
+        notes.forEach(function(n) {
+          content += "### " + (n.title || "Sin título") + "\n\n" + (n.text || "(vacía)") + "\n\n";
+        });
+      }
+    } else if (fmt === "txt") {
+      content  = title + "\n" + currentTab.url + "\nExportado: " + date + "\n\n";
+      if (hl.length) {
+        content += "=== RESALTADOS ===\n\n";
+        hl.forEach(function(h, i) {
+          content += (i + 1) + ". " + h.selectedText + "\n";
+          if (h.comment) content += "   → " + h.comment + "\n";
+          if (h.tags && h.tags.length) content += "   [" + h.tags.join(", ") + "]\n";
+          content += "\n";
+        });
+      }
+      if (notes.length) {
+        content += "=== NOTAS ===\n\n";
+        notes.forEach(function(n) {
+          content += "[" + (n.title || "Sin título") + "]\n" + (n.text || "") + "\n\n";
+        });
+      }
+    } else { // json
+      content = JSON.stringify({ url: currentTab.url, exportedAt: date, highlights: hl, notes: notes }, null, 2);
+    }
+
+    const ext  = fmt === "json" ? "json" : (fmt === "md" ? "md" : "txt");
+    const mime = fmt === "json" ? "application/json" : "text/plain";
+    const blob = new Blob([content], { type: mime + ";charset=utf-8" });
+    const a    = document.createElement("a");
+    a.href     = URL.createObjectURL(blob);
+    a.download = "annotate-" + new Date().toISOString().slice(0, 10) + "." + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus("export-status", "✓ Exportado como " + ext.toUpperCase() + ".");
+  }
+
+  async function exportAll(fmt) {
+    const data = await storage.exportAll();
+    let content = "# Annotate — Todos los resaltados\nExportado: " + new Date().toLocaleString("es-ES") + "\n\n";
+    const byUrl = {};
+    (data.highlights || []).forEach(function(h) {
+      if (!byUrl[h.url]) byUrl[h.url] = [];
+      byUrl[h.url].push(h);
+    });
+    Object.keys(byUrl).forEach(function(url) {
+      content += "## " + url + "\n\n";
+      byUrl[url].forEach(function(h, i) {
+        const cat = (ns.COLOR_OPTIONS.find(function(c) { return c.id === h.color; }) || {}).label || h.color;
+        content += (i + 1) + ". **[" + cat + "]** " + h.selectedText + "\n";
+        if (h.comment) content += "   > " + h.comment + "\n";
+        content += "\n";
+      });
+    });
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const a    = document.createElement("a");
+    a.href     = URL.createObjectURL(blob);
+    a.download = "annotate-all-" + new Date().toISOString().slice(0, 10) + ".md";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus("export-status", "✓ Exportación completa lista.");
+  }
+
+  async function startFlashcards() {
+    if (!currentTab) { setStatus("fc-status", "Sin página activa.", true); return; }
+    const colorFilter = $("fc-color-filter").value;
+    const mode        = $("fc-mode").value;
+    let hl = await storage.getHighlights(currentTab.url);
+
+    if (colorFilter !== "all") {
+      hl = hl.filter(function(h) { return h.color === colorFilter; });
+    }
+
+    if (mode === "qa") {
+      // In Q&A mode, only use items that have a comment (the comment becomes the "answer")
+      const withComment = hl.filter(function(h) { return h.comment && h.comment.trim(); });
+      if (withComment.length) hl = withComment;
+    }
+
+    if (!hl.length) {
+      setStatus("fc-status", "No hay resaltados" + (colorFilter !== "all" ? " con ese color" : "") + (mode === "qa" ? " con comentarios" : "") + ".", true);
+      return;
+    }
+
+    // Shuffle
+    _fcCards  = hl.slice().sort(function() { return Math.random() - 0.5; });
+    _fcIdx    = 0;
+    _fcFlipped = false;
+
+    $("fc-config").hidden = true;
+    $("fc-active").hidden = false;
+    showCard();
+  }
+
+  function stopFlashcards() {
+    $("fc-active").hidden = true;
+    $("fc-config").hidden = false;
+    setStatus("fc-status", "");
+  }
+
+  function showCard() {
+    if (!_fcCards.length) return;
+    _fcFlipped = false;
+    const card = _fcCards[_fcIdx];
+    const mode = $("fc-mode").value;
+    const total = _fcCards.length;
+
+    $("fc-progress-text").textContent = (_fcIdx + 1) + " / " + total;
+    $("fc-progress-fill").style.width = (100 * (_fcIdx + 1) / total) + "%";
+
+    const frontText = document.getElementById("fc-front-text");
+    const backText  = document.getElementById("fc-back-text");
+    const frontLabel = document.getElementById("fc-front-label");
+    const frontFace = document.getElementById("fc-card-front");
+    const backFace  = document.getElementById("fc-card-back");
+
+    if (mode === "qa" && card.comment) {
+      frontLabel.textContent = "¿Qué dice este fragmento?";
+      frontText.textContent  = card.comment.trim();
+      backText.textContent   = card.selectedText;
+    } else {
+      const cat = (ns.COLOR_OPTIONS.find(function(c) { return c.id === card.color; }) || {}).label || card.color;
+      frontLabel.textContent = cat + " — ¿Recuerdas este texto?";
+      frontText.textContent  = ns.truncate(card.selectedText, 30).replace(/\S+/g, "█████");
+      backText.textContent   = card.selectedText;
+    }
+
+    frontFace.hidden = false;
+    backFace.hidden  = true;
+    $("fc-btn-flip").textContent = "Voltear ↩";
+
+    // Animate
+    const cardEl = $("fc-card");
+    cardEl.style.animation = "none";
+    void cardEl.offsetWidth;
+    cardEl.style.animation = "";
+  }
+
+  function flipCard() {
+    _fcFlipped = !_fcFlipped;
+    document.getElementById("fc-card-front").hidden = _fcFlipped;
+    document.getElementById("fc-card-back").hidden  = !_fcFlipped;
+    $("fc-btn-flip").textContent = _fcFlipped ? "Ver pregunta ↩" : "Voltear ↩";
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // SIDEBAR TOGGLE (from popup)
+  // ═══════════════════════════════════════════════════════════
+
+  async function toggleSidebarOnPage() {
+    if (!currentTab || !currentTab.id) return;
+    try {
+      await chrome.tabs.sendMessage(currentTab.id, { type: "TOGGLE_SIDEBAR" });
+    } catch (_e) {
+      try {
+        await injectIntoTab(currentTab.id);
+        await chrome.tabs.sendMessage(currentTab.id, { type: "TOGGLE_SIDEBAR" });
+      } catch (err2) {
+        console.error("Annotate: no se pudo abrir sidebar", err2);
+      }
+    }
+  }
+
+
     const data = await storage.exportAll();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url  = URL.createObjectURL(blob);
@@ -617,7 +1059,17 @@
       currentTab = { id: tab.id, url: ns.normalizeUrl(tab.url) };
     }
 
-    // Tabs
+    // Sidebar toggle
+    try { $("btn-sidebar").addEventListener("click", toggleSidebarOnPage); } catch (_e) {}
+
+    // Organize tab
+    initOrganize();
+    initTagModal();
+
+    // Study tab
+    initStudyTab();
+
+    // Tabs (existing)
     initTabs();
 
     // Settings iniciales

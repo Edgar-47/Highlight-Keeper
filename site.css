@@ -1,12 +1,22 @@
+/* Tema claro */
 :root {
   color-scheme: light;
   --bg: #f7f3eb;
-  --bg-elevated: rgba(255, 255, 255, 0.68);
-  --bg-panel: rgba(255, 251, 245, 0.82);
+  --bg-end: #fffaf4;
+  --bg-elevated: rgba(255, 255, 255, 0.72);
+  --bg-panel: rgba(255, 251, 245, 0.84);
   --bg-strong: #fffaf2;
+  --card-bg: rgba(255, 255, 255, 0.72);
+  --timeline-bg: rgba(255, 255, 255, 0.78);
+  --footer-secondary-bg: rgba(255, 255, 255, 0.74);
   --hero: linear-gradient(145deg, #17130f 0%, #2e2319 46%, #4b3120 100%);
+  --section-contrast:
+    radial-gradient(circle at top right, rgba(95, 133, 255, 0.08), transparent 18rem),
+    radial-gradient(circle at left bottom, rgba(246, 196, 69, 0.1), transparent 20rem),
+    rgba(255, 251, 245, 0.84);
   --text: #201a15;
   --muted: #65574b;
+  --tag: rgba(101, 87, 75, 0.82);
   --line: rgba(42, 32, 24, 0.1);
   --shadow: 0 30px 80px rgba(24, 16, 11, 0.12);
   --shadow-soft: 0 18px 40px rgba(24, 16, 11, 0.08);
@@ -17,17 +27,28 @@
   --hero-muted: rgba(255, 247, 239, 0.76);
   --grid: rgba(30, 20, 14, 0.06);
   --progress: linear-gradient(90deg, #ffbf3f, #ff7a59, #7c84ff);
+  --focus-ring: 0 0 0 3px rgba(95, 133, 255, 0.24);
 }
 
+/* Tema oscuro */
 [data-theme="dark"] {
   color-scheme: dark;
   --bg: #0f1116;
-  --bg-elevated: rgba(25, 28, 36, 0.68);
-  --bg-panel: rgba(18, 21, 29, 0.82);
+  --bg-end: #141824;
+  --bg-elevated: rgba(25, 28, 36, 0.72);
+  --bg-panel: rgba(18, 21, 29, 0.84);
   --bg-strong: #151923;
+  --card-bg: rgba(26, 30, 40, 0.82);
+  --timeline-bg: rgba(24, 28, 39, 0.88);
+  --footer-secondary-bg: rgba(29, 34, 45, 0.82);
   --hero: linear-gradient(145deg, #161922 0%, #1b2231 52%, #2a1f2f 100%);
+  --section-contrast:
+    radial-gradient(circle at top right, rgba(95, 133, 255, 0.12), transparent 18rem),
+    radial-gradient(circle at left bottom, rgba(246, 196, 69, 0.1), transparent 20rem),
+    rgba(18, 21, 29, 0.84);
   --text: #eef2ff;
   --muted: #aeb6cf;
+  --tag: rgba(174, 182, 207, 0.84);
   --line: rgba(182, 193, 255, 0.14);
   --shadow: 0 34px 100px rgba(0, 0, 0, 0.34);
   --shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.22);
@@ -38,16 +59,20 @@
   --hero-muted: rgba(248, 250, 255, 0.78);
   --grid: rgba(136, 151, 224, 0.12);
   --progress: linear-gradient(90deg, #ffd25c, #ff8d6b, #86a3ff);
+  --focus-ring: 0 0 0 3px rgba(138, 163, 255, 0.26);
 }
 
+/* Reset simple */
 * {
   box-sizing: border-box;
 }
 
+/* Scroll suave */
 html {
   scroll-behavior: smooth;
 }
 
+/* Base global */
 body {
   margin: 0;
   min-height: 100vh;
@@ -56,19 +81,29 @@ body {
   background:
     radial-gradient(circle at 10% 10%, rgba(246, 196, 69, 0.12), transparent 18rem),
     radial-gradient(circle at 90% 15%, rgba(95, 133, 255, 0.12), transparent 16rem),
-    linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 84%, #ffffff 16%) 100%);
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-end) 100%);
   transition: background 220ms ease, color 220ms ease;
 }
 
+/* Enlaces neutros */
 a {
   color: inherit;
 }
 
+/* Mejor toque en movil */
 button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Foco visible */
+a:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Barra de lectura */
 .progress-bar {
   position: fixed;
   inset: 0 auto auto 0;
@@ -79,12 +114,14 @@ a {
   box-shadow: 0 10px 20px rgba(255, 145, 72, 0.2);
 }
 
+/* Fondos fijos */
 .bg-orb,
 .bg-grid {
   position: fixed;
   pointer-events: none;
 }
 
+/* Orbes decorativos */
 .bg-orb {
   z-index: -3;
   width: 28rem;
@@ -94,6 +131,7 @@ a {
   opacity: 0.45;
 }
 
+/* Orbe superior */
 .bg-orb--one {
   top: -6rem;
   right: -8rem;
@@ -101,6 +139,7 @@ a {
   animation: drift 16s ease-in-out infinite;
 }
 
+/* Orbe inferior */
 .bg-orb--two {
   left: -10rem;
   bottom: 12rem;
@@ -108,6 +147,7 @@ a {
   animation: drift 18s ease-in-out infinite reverse;
 }
 
+/* Reticula de fondo */
 .bg-grid {
   z-index: -4;
   inset: 0;
@@ -115,15 +155,23 @@ a {
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 40px 40px;
-  mask-image: radial-gradient(circle at center, black 38%, transparent 92%);
+  opacity: 0.75;
 }
 
+/* Ancho general */
 .page-shell {
   width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 56px;
 }
 
+/* Separacion del main */
+.main-content {
+  display: grid;
+  gap: 22px;
+}
+
+/* Tarjetas grandes */
 .hero,
 .section,
 .footer {
@@ -135,12 +183,14 @@ a {
   backdrop-filter: blur(20px);
 }
 
+/* Hero */
 .hero {
   padding: 24px;
   background: var(--hero);
   color: var(--hero-text);
 }
 
+/* Brillo sutil */
 .hero::before,
 .section::before,
 .footer::before {
@@ -151,6 +201,7 @@ a {
   pointer-events: none;
 }
 
+/* Barra superior */
 .topbar {
   display: flex;
   align-items: center;
@@ -158,6 +209,7 @@ a {
   gap: 20px;
 }
 
+/* Marca */
 .brand {
   display: inline-flex;
   align-items: center;
@@ -165,6 +217,7 @@ a {
   text-decoration: none;
 }
 
+/* Logo */
 .brand__icon {
   width: 52px;
   height: 52px;
@@ -172,21 +225,25 @@ a {
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.22);
 }
 
+/* Texto de la marca */
 .brand__text {
   display: grid;
   gap: 2px;
 }
 
+/* Nombre */
 .brand__text strong {
   font-size: 1rem;
   letter-spacing: 0.02em;
 }
 
+/* Subtitulo */
 .brand__text span {
   color: var(--hero-muted);
   font-size: 0.92rem;
 }
 
+/* Grupos flex */
 .topbar__actions,
 .topbar__links,
 .hero__eyebrow,
@@ -199,6 +256,7 @@ a {
   flex-wrap: wrap;
 }
 
+/* Enlaces de la cabecera */
 .topbar__links a {
   padding: 10px 12px;
   border-radius: 999px;
@@ -207,6 +265,7 @@ a {
   transition: background 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
+/* Estado hover del menu */
 .topbar__links a:hover,
 .topbar__links a:focus-visible {
   background: rgba(255, 255, 255, 0.08);
@@ -214,6 +273,7 @@ a {
   transform: translateY(-1px);
 }
 
+/* Base de botones */
 .theme-toggle,
 .button {
   display: inline-flex;
@@ -236,17 +296,20 @@ a {
     box-shadow 180ms ease;
 }
 
+/* Hover comun */
 .theme-toggle:hover,
 .button:hover {
   transform: translateY(-1px);
 }
 
+/* Boton de tema */
 .theme-toggle {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
   color: var(--hero-text);
 }
 
+/* Icono del tema */
 .theme-toggle__icon {
   display: inline-grid;
   place-items: center;
@@ -256,24 +319,28 @@ a {
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* Boton principal */
 .button--primary {
   color: #1f170f;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   box-shadow: 0 16px 28px rgba(255, 161, 62, 0.28);
 }
 
+/* Boton secundario */
 .button--secondary {
   color: var(--hero-text);
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Variante del footer */
 .footer .button--secondary {
   color: var(--text);
-  background: color-mix(in srgb, var(--bg-elevated) 86%, transparent);
+  background: var(--footer-secondary-bg);
   border-color: var(--line);
 }
 
+/* Rejilla del hero */
 .hero__content {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.95fr);
@@ -282,6 +349,7 @@ a {
   margin-top: 38px;
 }
 
+/* Etiquetas */
 .badge {
   padding: 8px 12px;
   border-radius: 999px;
@@ -292,11 +360,13 @@ a {
   font-weight: 700;
 }
 
+/* Etiqueta destacada */
 .badge--live {
   color: #201810;
   background: linear-gradient(135deg, var(--accent), #ffe28a);
 }
 
+/* Titulos grandes */
 .hero h1,
 .section h2,
 .footer h2 {
@@ -305,12 +375,14 @@ a {
   line-height: 0.96;
 }
 
+/* Titulo principal */
 .hero h1 {
   max-width: 11ch;
   margin-top: 18px;
   font-size: clamp(3rem, 6vw, 5.5rem);
 }
 
+/* Textos secundarios */
 .hero__lead,
 .section-heading p,
 .feature-card p,
@@ -324,6 +396,7 @@ a {
   color: var(--muted);
 }
 
+/* Copy del hero */
 .hero__lead {
   max-width: 60ch;
   margin: 18px 0 0;
@@ -332,10 +405,12 @@ a {
   line-height: 1.78;
 }
 
+/* Acciones del hero */
 .hero__actions {
   margin-top: 28px;
 }
 
+/* Bloque de metricas */
 .hero__metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -345,6 +420,7 @@ a {
   list-style: none;
 }
 
+/* Tarjeta metrica */
 .metric-card {
   padding: 16px;
   border-radius: 22px;
@@ -352,11 +428,13 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Numero grande */
 .metric-card strong {
   display: block;
   font-size: clamp(1.8rem, 3vw, 2.4rem);
 }
 
+/* Texto de metrica */
 .metric-card span {
   display: block;
   margin-top: 6px;
@@ -364,10 +442,12 @@ a {
   line-height: 1.5;
 }
 
+/* Zona visual */
 .hero__visual {
   position: relative;
 }
 
+/* Ventana del mockup */
 .workspace-window {
   position: relative;
   min-height: 500px;
@@ -380,11 +460,13 @@ a {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 26px 50px rgba(0, 0, 0, 0.18);
 }
 
+/* Botones de ventana */
 .workspace-window__chrome {
   display: flex;
   gap: 8px;
 }
 
+/* Puntos de ventana */
 .workspace-window__chrome span {
   width: 12px;
   height: 12px;
@@ -392,18 +474,21 @@ a {
   background: rgba(255, 255, 255, 0.24);
 }
 
+/* Cuerpo del mockup */
 .workspace-window__content {
   display: grid;
   gap: 18px;
   margin-top: 18px;
 }
 
+/* Barra del mockup */
 .workspace-window__toolbar {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 }
 
+/* Pildoras */
 .toolbar-pill {
   padding: 10px 14px;
   border-radius: 999px;
@@ -413,14 +498,17 @@ a {
   font-weight: 700;
 }
 
+/* Pildora calida */
 .toolbar-pill--warm {
   background: rgba(246, 196, 69, 0.18);
 }
 
+/* Pildora fria */
 .toolbar-pill--dark {
   background: rgba(95, 133, 255, 0.18);
 }
 
+/* Preview central */
 .content-preview {
   position: relative;
   min-height: 370px;
@@ -430,6 +518,7 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Texto de demo */
 .preview-text {
   display: grid;
   gap: 12px;
@@ -438,6 +527,7 @@ a {
   line-height: 1.8;
 }
 
+/* Resaltados de demo */
 .highlight {
   display: inline-flex;
   width: fit-content;
@@ -447,14 +537,17 @@ a {
   font-weight: 700;
 }
 
+/* Amarillo */
 .highlight--yellow {
   background: linear-gradient(135deg, #ffe36c, #ffd24f);
 }
 
+/* Azul */
 .highlight--blue {
   background: linear-gradient(135deg, #97c3ff, #70a4ff);
 }
 
+/* Post-it */
 .sticky {
   position: absolute;
   width: 210px;
@@ -466,12 +559,14 @@ a {
   animation: floatCard 6s ease-in-out infinite;
 }
 
+/* Post-it amarillo */
 .sticky--yellow {
   top: 48px;
   right: 24px;
   background: linear-gradient(180deg, #ffed9a, #ffd96e);
 }
 
+/* Post-it rosa */
 .sticky--pink {
   right: 82px;
   bottom: 26px;
@@ -479,6 +574,7 @@ a {
   animation-delay: 1.2s;
 }
 
+/* Cabecera del post-it */
 .sticky__header {
   display: flex;
   align-items: center;
@@ -487,6 +583,7 @@ a {
   font-weight: 800;
 }
 
+/* Punto del post-it */
 .sticky__dot {
   width: 12px;
   height: 12px;
@@ -494,11 +591,13 @@ a {
   background: rgba(39, 28, 19, 0.3);
 }
 
+/* Texto del post-it */
 .sticky p {
   margin: 12px 0 0;
   line-height: 1.65;
 }
 
+/* Chips laterales */
 .floating-chip {
   position: absolute;
   z-index: 2;
@@ -512,34 +611,36 @@ a {
   box-shadow: var(--shadow-soft);
 }
 
+/* Chip izquierdo */
 .floating-chip--one {
   left: -16px;
   bottom: 48px;
 }
 
+/* Chip derecho */
 .floating-chip--two {
   right: 12px;
   top: -12px;
 }
 
+/* Secciones y footer */
 .section,
 .footer {
-  margin-top: 22px;
   padding: 30px;
   background: var(--bg-panel);
 }
 
+/* Seccion con acento */
 .section--contrast {
-  background:
-    radial-gradient(circle at top right, rgba(95, 133, 255, 0.08), transparent 18rem),
-    radial-gradient(circle at left bottom, rgba(246, 196, 69, 0.1), transparent 20rem),
-    var(--bg-panel);
+  background: var(--section-contrast);
 }
 
+/* Cabecera de seccion */
 .section-heading {
   max-width: 760px;
 }
 
+/* Etiquetas de bloque */
 .section-tag,
 .footer__eyebrow {
   margin: 0 0 10px;
@@ -547,20 +648,23 @@ a {
   letter-spacing: 0.18em;
   font-size: 0.78rem;
   font-weight: 800;
-  color: color-mix(in srgb, var(--muted) 74%, transparent);
+  color: var(--tag);
 }
 
+/* Titulos de seccion */
 .section h2,
 .footer h2 {
   font-size: clamp(2rem, 4vw, 3.4rem);
 }
 
+/* Texto de seccion */
 .section-heading p {
   margin: 16px 0 0;
   line-height: 1.75;
   font-size: 1rem;
 }
 
+/* Rejillas de contenido */
 .feature-grid,
 .architecture-grid,
 .stack-showcase {
@@ -569,18 +673,22 @@ a {
   margin-top: 22px;
 }
 
+/* Rejilla de funciones */
 .feature-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+/* Rejilla de arquitectura */
 .architecture-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+/* Rejilla de stack */
 .stack-showcase {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Tarjetas comunes */
 .feature-card,
 .architecture-card,
 .stack-panel,
@@ -589,16 +697,18 @@ a {
   position: relative;
   border-radius: 24px;
   border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+  background: var(--card-bg);
   box-shadow: var(--shadow-soft);
 }
 
+/* Tarjetas simples */
 .feature-card,
 .architecture-card,
 .stack-panel {
   padding: 22px;
 }
 
+/* Etiquetas internas */
 .feature-card__number,
 .architecture-card__label {
   display: inline-flex;
@@ -611,16 +721,19 @@ a {
   text-transform: uppercase;
 }
 
+/* Numero de funcion */
 .feature-card__number {
   color: #312313;
   background: linear-gradient(135deg, #ffd86d, #ffb15d);
 }
 
+/* Etiqueta de arquitectura */
 .architecture-card__label {
   color: var(--accent-cool);
-  background: color-mix(in srgb, var(--accent-cool) 14%, transparent);
+  background: rgba(95, 133, 255, 0.12);
 }
 
+/* Titulos de tarjetas */
 .feature-card h3,
 .architecture-card h3,
 .stack-panel h3 {
@@ -629,6 +742,7 @@ a {
   letter-spacing: -0.03em;
 }
 
+/* Texto de tarjetas */
 .feature-card p,
 .architecture-card p,
 .stack-panel p {
@@ -636,6 +750,7 @@ a {
   line-height: 1.68;
 }
 
+/* Panel mixto */
 .split-panel {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
@@ -643,16 +758,19 @@ a {
   padding: 18px;
 }
 
+/* Texto del panel */
 .split-panel__copy {
   padding: 12px;
 }
 
+/* Lista del recorrido */
 .journey-list {
   margin: 18px 0 0;
   padding-left: 20px;
   line-height: 1.8;
 }
 
+/* Timeline lateral */
 .timeline-card {
   display: grid;
   gap: 12px;
@@ -660,9 +778,10 @@ a {
   align-content: center;
   background:
     radial-gradient(circle at top right, rgba(255, 196, 82, 0.16), transparent 10rem),
-    color-mix(in srgb, var(--bg-elevated) 84%, transparent);
+    var(--timeline-bg);
 }
 
+/* Paso individual */
 .timeline-step {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -674,6 +793,7 @@ a {
   background: var(--bg-strong);
 }
 
+/* Numero de paso */
 .timeline-step span {
   display: inline-grid;
   place-items: center;
@@ -685,28 +805,34 @@ a {
   font-weight: 800;
 }
 
+/* Texto del paso */
 .timeline-step p {
   margin: 0;
   line-height: 1.5;
 }
 
+/* Footer */
 .footer {
   display: grid;
   gap: 20px;
 }
 
+/* Metadatos del footer */
 .footer__meta {
   color: var(--muted);
 }
 
+/* Enlaces del footer */
 .footer__meta a {
   text-decoration: none;
 }
 
+/* Hover del footer */
 .footer__meta a:hover {
   text-decoration: underline;
 }
 
+/* Elementos ocultos al entrar */
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -718,17 +844,20 @@ a {
   transition-delay: var(--reveal-delay, 0ms);
 }
 
+/* Estado visible */
 .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
   filter: blur(0);
 }
 
+/* Tarjetas con tilt */
 [data-tilt] {
   transform-style: preserve-3d;
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
+/* Animacion de orbes */
 @keyframes drift {
   0%,
   100% {
@@ -739,6 +868,7 @@ a {
   }
 }
 
+/* Animacion de post-it */
 @keyframes floatCard {
   0%,
   100% {
@@ -749,49 +879,31 @@ a {
   }
 }
 
+/* Tablet */
 @media (max-width: 1080px) {
-  .hero__content,
-  .split-panel,
-  .feature-grid,
-  .architecture-grid,
-  .stack-showcase {
-    grid-template-columns: 1fr 1fr;
-  }
-
+  /* Hero a una columna */
   .hero__content {
     grid-template-columns: 1fr;
   }
+
+  /* Rejillas medias */
+  .feature-grid,
+  .architecture-grid,
+  .stack-showcase,
+  .split-panel {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
+/* Movil */
 @media (max-width: 780px) {
+  /* Menos margen lateral */
   .page-shell {
     width: min(100% - 20px, 1200px);
     padding-top: 12px;
   }
 
-  .topbar,
-  .topbar__actions,
-  .hero__metrics,
-  .feature-grid,
-  .architecture-grid,
-  .stack-showcase,
-  .split-panel,
-  .footer__actions,
-  .footer__meta {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .topbar,
-  .topbar__actions {
-    align-items: stretch;
-  }
-
-  .topbar__links {
-    justify-content: flex-start;
-  }
-
+  /* Tarjetas mas compactas */
   .hero,
   .section,
   .footer {
@@ -799,16 +911,50 @@ a {
     border-radius: 24px;
   }
 
+  /* Layout en columna */
+  .topbar,
+  .topbar__actions,
+  .topbar__links,
+  .hero__actions,
+  .footer__actions,
+  .footer__meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Rejillas a una columna */
+  .hero__metrics,
+  .feature-grid,
+  .architecture-grid,
+  .stack-showcase,
+  .split-panel {
+    grid-template-columns: 1fr;
+  }
+
+  /* Menu alineado */
+  .topbar,
+  .topbar__actions {
+    align-items: stretch;
+  }
+
+  /* Ajuste de links */
+  .topbar__links {
+    justify-content: flex-start;
+  }
+
+  /* Titulos mas comodos */
   .hero h1,
   .section h2,
   .footer h2 {
     line-height: 1.02;
   }
 
+  /* Mockup menor */
   .workspace-window {
     min-height: 440px;
   }
 
+  /* Post-it en flujo */
   .sticky {
     position: relative;
     top: auto;
@@ -818,16 +964,20 @@ a {
     margin-top: 16px;
   }
 
+  /* Chips ocultos */
   .floating-chip {
     display: none;
   }
 }
 
+/* Menos movimiento */
 @media (prefers-reduced-motion: reduce) {
+  /* Sin scroll animado */
   html {
     scroll-behavior: auto;
   }
 
+  /* Sin transiciones */
   *,
   *::before,
   *::after {
@@ -835,6 +985,7 @@ a {
     transition: none !important;
   }
 
+  /* Reveal visible */
   .reveal {
     opacity: 1;
     transform: none;

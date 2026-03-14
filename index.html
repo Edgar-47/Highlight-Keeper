@@ -1,26 +1,44 @@
 <!doctype html>
 <html lang="es">
   <head>
+    <!-- Metadatos base -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Titulo del sitio -->
     <title>Resaltador Persistente | Extension para leer, subrayar y anotar</title>
+
+    <!-- Descripcion para buscadores -->
     <meta
       name="description"
       content="Landing page de una extension de navegador para guardar subrayados persistentes y notas post-it sobre cualquier pagina web."
     />
+
+    <!-- Tema compatible con claro y oscuro -->
     <meta name="color-scheme" content="light dark" />
+
+    <!-- Estilos globales -->
     <link rel="stylesheet" href="./site.css" />
+
+    <!-- JS ligero para interaccion -->
     <script src="./script.js" defer></script>
   </head>
   <body>
+    <!-- Fondo decorativo -->
     <div class="bg-orb bg-orb--one" aria-hidden="true"></div>
     <div class="bg-orb bg-orb--two" aria-hidden="true"></div>
     <div class="bg-grid" aria-hidden="true"></div>
+
+    <!-- Barra de progreso -->
     <div class="progress-bar" id="progressBar" aria-hidden="true"></div>
 
+    <!-- Contenedor general -->
     <div class="page-shell">
+      <!-- Hero principal -->
       <header class="hero" id="inicio">
-        <nav class="topbar">
+        <!-- Navegacion superior -->
+        <nav class="topbar" aria-label="Navegacion principal">
+          <!-- Marca -->
           <a class="brand" href="#inicio" aria-label="Ir al inicio">
             <img src="./icons/icon128.png" alt="Logo de la extension" class="brand__icon" />
             <span class="brand__text">
@@ -29,7 +47,9 @@
             </span>
           </a>
 
+          <!-- Enlaces y toggle -->
           <div class="topbar__actions">
+            <!-- Menu interno -->
             <div class="topbar__links">
               <a href="#funciones">Funciones</a>
               <a href="#arquitectura">Arquitectura</a>
@@ -37,36 +57,49 @@
               <a href="#enlaces">Enlaces</a>
             </div>
 
+            <!-- Boton de tema -->
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">
-              <span class="theme-toggle__icon" aria-hidden="true">◐</span>
+              <span class="theme-toggle__icon" aria-hidden="true">&#9680;</span>
               <span class="theme-toggle__label">Modo oscuro</span>
             </button>
           </div>
         </nav>
 
+        <!-- Contenido principal del hero -->
         <section class="hero__content">
+          <!-- Texto principal -->
           <div class="hero__copy reveal">
+            <!-- Etiquetas rapidas -->
             <div class="hero__eyebrow">
               <span class="badge badge--live">MVP funcional</span>
               <span class="badge">Manifest V3</span>
               <span class="badge">Local first</span>
             </div>
 
+            <!-- Mensaje principal -->
             <h1>Tu propia capa de memoria sobre cualquier pagina web.</h1>
 
+            <!-- Descripcion corta -->
             <p class="hero__lead">
               Esta extension convierte una pagina normal en un espacio de trabajo personal: subrayas texto, dejas
               notas post-it flotantes, vuelves dias despues y todo sigue en su sitio. Pensada para estudiar,
               investigar, comparar informacion y trabajar con contexto real.
             </p>
 
+            <!-- Llamadas a la accion -->
             <div class="hero__actions">
-              <a class="button button--primary" href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">
+              <a
+                class="button button--primary"
+                href="https://github.com/Edgar-47/Playground"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Ver repositorio
               </a>
               <a class="button button--secondary" href="#arquitectura">Como la hemos hecho</a>
             </div>
 
+            <!-- Numeros destacados -->
             <ul class="hero__metrics">
               <li class="metric-card reveal" data-delay="80">
                 <strong data-counter="8">0</strong>
@@ -83,22 +116,29 @@
             </ul>
           </div>
 
+          <!-- Mockup visual -->
           <div class="hero__visual reveal" data-tilt>
+            <!-- Ventana simulada -->
             <div class="workspace-window">
-              <div class="workspace-window__chrome">
+              <!-- Cabecera de ventana -->
+              <div class="workspace-window__chrome" aria-hidden="true">
                 <span></span>
                 <span></span>
                 <span></span>
               </div>
 
+              <!-- Cuerpo del mockup -->
               <div class="workspace-window__content">
+                <!-- Pildoras funcionales -->
                 <div class="workspace-window__toolbar">
                   <div class="toolbar-pill">Highlight</div>
                   <div class="toolbar-pill toolbar-pill--warm">Post-it</div>
                   <div class="toolbar-pill toolbar-pill--dark">Persistencia</div>
                 </div>
 
+                <!-- Preview del producto -->
                 <div class="content-preview">
+                  <!-- Texto decorativo -->
                   <div class="preview-text">
                     <span>Leer contenido web de forma pasiva ya no basta.</span>
                     <span class="highlight highlight--yellow">Ahora puedes marcar ideas clave</span>
@@ -107,6 +147,7 @@
                     <span>para continuar justo donde lo dejaste.</span>
                   </div>
 
+                  <!-- Post-it de ejemplo -->
                   <article class="sticky sticky--yellow">
                     <header class="sticky__header">
                       <span>Idea principal</span>
@@ -115,6 +156,7 @@
                     <p>Comparar competidores y recuperar insight mas tarde.</p>
                   </article>
 
+                  <!-- Segundo post-it -->
                   <article class="sticky sticky--pink">
                     <header class="sticky__header">
                       <span>Tarea rapida</span>
@@ -126,14 +168,18 @@
               </div>
             </div>
 
+            <!-- Chips flotantes -->
             <div class="floating-chip floating-chip--one">chrome.storage.local</div>
             <div class="floating-chip floating-chip--two">Popup + Content Script</div>
           </div>
         </section>
       </header>
 
-      <main>
+      <!-- Contenido principal -->
+      <main class="main-content">
+        <!-- Bloque de funciones -->
         <section class="section reveal" id="funciones">
+          <!-- Encabezado de seccion -->
           <div class="section-heading">
             <p class="section-tag">Que hace</p>
             <h2>Funciones pensadas para lectura activa y trabajo real.</h2>
@@ -143,6 +189,7 @@
             </p>
           </div>
 
+          <!-- Tarjetas de funciones -->
           <div class="feature-grid">
             <article class="feature-card reveal" data-delay="50">
               <span class="feature-card__number">01</span>
@@ -170,7 +217,9 @@
           </div>
         </section>
 
+        <!-- Bloque de arquitectura -->
         <section class="section section--contrast reveal" id="arquitectura">
+          <!-- Encabezado de seccion -->
           <div class="section-heading">
             <p class="section-tag">Como la hemos hecho</p>
             <h2>Arquitectura limpia para crecer sin deuda innecesaria.</h2>
@@ -180,6 +229,7 @@
             </p>
           </div>
 
+          <!-- Tarjetas de capas -->
           <div class="architecture-grid">
             <article class="architecture-card reveal" data-delay="40">
               <span class="architecture-card__label">Popup</span>
@@ -207,7 +257,9 @@
           </div>
         </section>
 
+        <!-- Bloque de tecnologias -->
         <section class="section reveal" id="tecnologias">
+          <!-- Encabezado de seccion -->
           <div class="section-heading">
             <p class="section-tag">Stack tecnico</p>
             <h2>Lenguajes y tecnologias utilizados</h2>
@@ -217,6 +269,7 @@
             </p>
           </div>
 
+          <!-- Tarjetas de stack -->
           <div class="stack-showcase">
             <article class="stack-panel reveal" data-delay="40">
               <h3>HTML</h3>
@@ -245,8 +298,11 @@
           </div>
         </section>
 
+        <!-- Bloque de flujo -->
         <section class="section reveal">
+          <!-- Panel dividido -->
           <div class="split-panel">
+            <!-- Texto del flujo -->
             <div class="split-panel__copy">
               <p class="section-tag">Flujo de trabajo</p>
               <h2>Leer, marcar, anotar y volver mas tarde sin perder nada.</h2>
@@ -258,7 +314,8 @@
               </ol>
             </div>
 
-            <div class="timeline-card" data-tilt>
+            <!-- Timeline visual -->
+            <div class="timeline-card reveal" data-delay="80" data-tilt>
               <div class="timeline-step">
                 <span>1</span>
                 <p>Seleccion del contenido</p>
@@ -280,24 +337,40 @@
         </section>
       </main>
 
+      <!-- Pie final -->
       <footer class="footer reveal" id="enlaces">
+        <!-- Texto del cierre -->
         <div>
           <p class="footer__eyebrow">Proyecto desarrollado por Edgar-47</p>
           <h2>Codigo, idea y evolucion en un mismo sitio.</h2>
         </div>
 
+        <!-- Acciones finales -->
         <div class="footer__actions">
-          <a class="button button--primary" href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">
+          <a
+            class="button button--primary"
+            href="https://github.com/Edgar-47/Playground"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Abrir repositorio
           </a>
-          <a class="button button--secondary" href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">
+          <a
+            class="button button--secondary"
+            href="https://github.com/Edgar-47"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Ir a mi GitHub
           </a>
         </div>
 
+        <!-- Enlaces cortos -->
         <div class="footer__meta">
-          <a href="https://github.com/Edgar-47" target="_blank" rel="noreferrer">github.com/Edgar-47</a>
-          <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noreferrer">github.com/Edgar-47/Playground</a>
+          <a href="https://github.com/Edgar-47" target="_blank" rel="noopener noreferrer">github.com/Edgar-47</a>
+          <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noopener noreferrer">
+            github.com/Edgar-47/Playground
+          </a>
           <span id="yearLabel">2026</span>
         </div>
       </footer>

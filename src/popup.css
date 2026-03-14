@@ -852,3 +852,227 @@ kbd {
   font-size: 13px;
   color: var(--ink-2);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEW FEATURES — Tags, Export, Flashcards
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tag input row ──────────────────────────────────────────────────────── */
+.tag-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* ── Tag cloud (management view) ────────────────────────────────────────── */
+.tag-cloud {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag-chip--manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.tag-chip--manage:hover { border-color: var(--border-strong); color: var(--ink); }
+
+.tag-chip--manage.is-active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.tag-chip__label { cursor: pointer; }
+
+.tag-chip__del {
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  opacity: 0.6;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  transition: opacity 150ms;
+}
+
+.tag-chip__del:hover { opacity: 1; }
+
+/* ── Export grid ────────────────────────────────────────────────────────── */
+.export-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.export-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 150ms;
+  font-family: var(--font);
+}
+
+.export-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.export-card__icon {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-family: monospace;
+}
+
+.export-card__label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+
+/* ── Flashcard config ───────────────────────────────────────────────────── */
+.fc-config-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.fc-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.fc-select {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 12px var(--font);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 150ms;
+}
+
+.fc-select:focus { border-color: var(--ink); }
+
+/* ── Flashcard active ───────────────────────────────────────────────────── */
+.fc-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fc-progress-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.fc-progress-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.fc-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink);
+  transition: width 300ms ease;
+}
+
+.fc-card {
+  min-height: 130px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  animation: fc-card-in 240ms cubic-bezier(.22,.68,0,1.2) both;
+}
+
+@keyframes fc-card-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.fc-card__face { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; }
+
+.fc-card__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.fc-card__text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.fc-card__back .fc-card__text {
+  color: var(--ink);
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  width: 100%;
+}
+
+.fc-btn-row {
+  display: flex;
+  gap: 6px;
+}
