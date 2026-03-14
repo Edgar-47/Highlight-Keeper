@@ -317,9 +317,24 @@ button:focus-visible {
   flex-wrap: wrap;
 }
 
+/* Mas aire entre items del menu */
+.topbar__links {
+  gap: 18px;
+}
+
+/* Mas aire entre badges */
+.hero__eyebrow {
+  gap: 14px;
+}
+
+/* Mas aire entre enlaces finales */
+.footer__meta {
+  gap: 16px 20px;
+}
+
 /* Enlaces de la cabecera */
 .topbar__links a {
-  padding: 10px 12px;
+  padding: 10px 14px;
   border-radius: 999px;
   color: var(--hero-muted);
   text-decoration: none;
@@ -470,6 +485,7 @@ button:focus-visible {
 /* Acciones del hero */
 .hero__actions {
   margin-top: 28px;
+  gap: 16px 18px;
 }
 
 /* Bloque de metricas */
@@ -892,11 +908,18 @@ button:focus-visible {
 /* Metadatos del footer */
 .footer__meta {
   color: var(--muted);
+  gap: 16px 28px;
 }
 
 /* Enlaces del footer */
 .footer__meta a {
   text-decoration: none;
+}
+
+/* Cada item del footer respira mejor */
+.footer__meta > * {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Hover del footer */
@@ -1008,6 +1031,12 @@ button:focus-visible {
     align-items: stretch;
   }
 
+  /* En movil mantenemos separacion comoda */
+  .topbar__links,
+  .hero__eyebrow {
+    gap: 12px;
+  }
+
   /* Rejillas a una columna */
   .hero__metrics,
   .feature-grid,
@@ -1021,6 +1050,11 @@ button:focus-visible {
   .topbar,
   .topbar__actions {
     align-items: stretch;
+  }
+
+  /* En movil dejamos espacio vertical claro */
+  .footer__meta {
+    gap: 12px;
   }
 
   /* Ajuste de links */
