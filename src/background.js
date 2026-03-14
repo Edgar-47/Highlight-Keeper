@@ -1,14 +1,14 @@
 (function bootstrapBackground() {
   const COLOR_OPTIONS = [
-    { id: "yellow",  label: "Amarillo",   circle: "🟡" },
-    { id: "green",   label: "Idea clave", circle: "🟢" },
-    { id: "blue",    label: "Info",       circle: "🔵" },
-    { id: "pink",    label: "Rosa",       circle: "🩷" },
-    { id: "orange",  label: "Repasar",    circle: "🟠" },
-    { id: "purple",  label: "Duda",       circle: "🟣" },
-    { id: "teal",    label: "Turquesa",   circle: "🔹" },
-    { id: "red",     label: "Importante", circle: "🔴" },
-    { id: "gray",    label: "Gris",       circle: "⚪" }
+    { id: "yellow",  label: "Amarillo",   circle: "" },
+    { id: "green",   label: "Idea clave", circle: "" },
+    { id: "blue",    label: "Info",       circle: "" },
+    { id: "pink",    label: "Rosa",       circle: "" },
+    { id: "orange",  label: "Repasar",    circle: "" },
+    { id: "purple",  label: "Duda",       circle: "" },
+    { id: "teal",    label: "Turquesa",   circle: "" },
+    { id: "red",     label: "Importante", circle: "" },
+    { id: "gray",    label: "Gris",       circle: "" }
   ];
 
   const MENU_ROOT   = "annotate";
@@ -26,7 +26,7 @@
         chrome.contextMenus.create({
           id: MENU_ROOT + ":hl:" + color.id,
           parentId: MENU_ROOT,
-          title: color.circle + " " + color.label,
+          title: color.label,
           contexts: ["selection"]
         });
       });
@@ -34,7 +34,7 @@
       chrome.contextMenus.create({
         id: MENU_ROOT + ":hl:custom",
         parentId: MENU_ROOT,
-        title: "🎨 Último color personalizado",
+        title: "Ultimo color personalizado",
         contexts: ["selection"]
       });
 
@@ -43,14 +43,14 @@
       chrome.contextMenus.create({
         id: MENU_ROOT + ":note-from-selection",
         parentId: MENU_ROOT,
-        title: "📝 Crear nota con selección",
+        title: "Crear nota con seleccion",
         contexts: ["selection"]
       });
 
       chrome.contextMenus.create({
         id: MENU_ROOT + ":note",
         parentId: MENU_ROOT,
-        title: "🗒️ Nueva nota post-it",
+        title: "Nueva nota",
         contexts: ["page"]
       });
 
@@ -59,7 +59,7 @@
       chrome.contextMenus.create({
         id: MENU_ROOT + ":clear",
         parentId: MENU_ROOT,
-        title: "🗑️ Limpiar resaltados de esta página",
+        title: "Limpiar resaltados de esta pagina",
         contexts: ["page"]
       });
     });

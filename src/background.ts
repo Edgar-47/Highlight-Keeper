@@ -2,14 +2,14 @@
 
 namespace PersistentHighlighterBackground {
   const COLOR_OPTIONS = [
-    { id: "yellow", label: "Amarillo", circle: "\u{1F7E1}" },
-    { id: "green", label: "Verde", circle: "\u{1F7E2}" },
-    { id: "blue", label: "Azul", circle: "\u{1F535}" },
-    { id: "pink", label: "Rosa", circle: "\u{1FA77}" },
-    { id: "orange", label: "Naranja", circle: "\u{1F7E0}" },
-    { id: "purple", label: "Morado", circle: "\u{1F7E3}" },
-    { id: "teal", label: "Turquesa", circle: "\u{1F539}" },
-    { id: "gray", label: "Gris", circle: "\u26AA" }
+    { id: "yellow", label: "Amarillo", circle: "" },
+    { id: "green", label: "Verde", circle: "" },
+    { id: "blue", label: "Azul", circle: "" },
+    { id: "pink", label: "Rosa", circle: "" },
+    { id: "orange", label: "Naranja", circle: "" },
+    { id: "purple", label: "Morado", circle: "" },
+    { id: "teal", label: "Turquesa", circle: "" },
+    { id: "gray", label: "Gris", circle: "" }
   ] as const;
 
   const MENU_ROOT = "persistent-highlighter";
@@ -27,7 +27,7 @@ namespace PersistentHighlighterBackground {
         chrome.contextMenus.create({
           id: `${MENU_ROOT}:highlight:${color.id}`,
           parentId: MENU_ROOT,
-          title: `${color.circle} ${color.label}`,
+          title: color.label,
           contexts: ["selection"]
         });
       }
@@ -35,7 +35,7 @@ namespace PersistentHighlighterBackground {
       chrome.contextMenus.create({
         id: `${MENU_ROOT}:highlight:custom`,
         parentId: MENU_ROOT,
-        title: "\u{1F3A8} Ultimo color personalizado",
+        title: "Ultimo color personalizado",
         contexts: ["selection"]
       });
 
@@ -49,7 +49,7 @@ namespace PersistentHighlighterBackground {
       chrome.contextMenus.create({
         id: `${MENU_ROOT}:note`,
         parentId: MENU_ROOT,
-        title: "Nueva nota post-it",
+        title: "Nueva nota",
         contexts: ["page"]
       });
     });

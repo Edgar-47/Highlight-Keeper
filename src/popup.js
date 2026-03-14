@@ -160,7 +160,7 @@
     customBtn.className = "color-cell" + (!isExtra && selectedColor === "custom" ? " is-active" : "");
     customBtn.title = "Personalizado";
     customBtn.dataset.color = "custom";
-    customBtn.innerHTML = '<span class="color-cell__swatch color-cell__swatch--custom" id="custom-swatch-inline"></span><span class="color-cell__label">Custom</span>';
+    customBtn.innerHTML = '<span class="color-cell__swatch color-cell__swatch--custom" id="custom-swatch-inline"></span><span class="color-cell__label">Personalizado</span>';
     customBtn.addEventListener("click", async function() {
       await storage.saveSettings({ selectedColor: "custom" });
       renderColorGrid("custom");
@@ -284,9 +284,9 @@
     }
 
     chip("all", "Todos", counts.all);
-    if (counts["favorite"]) chip("favorite", "⭐ Favoritos", counts["favorite"]);
+    if (counts["favorite"]) chip("favorite", "Favoritos", counts["favorite"]);
     ns.COLOR_OPTIONS.forEach(function(c) {
-      if (counts[c.id]) chip(c.id, c.circle + " " + c.label, counts[c.id]);
+      if (counts[c.id]) chip(c.id, c.label, counts[c.id]);
     });
   }
 
@@ -307,7 +307,7 @@
     }
 
     if (!filtered.length) {
-      list.innerHTML = '<p class="empty-state">' + (hlSearch ? "Sin resultados para «" + ns.escapeHtml(hlSearch) + "»" : "No hay resaltados en esta página.") + '</p>';
+      list.innerHTML = '<p class="empty-state">' + (hlSearch ? 'Sin resultados para "' + ns.escapeHtml(hlSearch) + '"' : "No hay resaltados en esta pagina.") + '</p>';
       return;
     }
 
@@ -334,9 +334,9 @@
           '<p class="hl-row__meta">' + ns.formatDate(record.createdAt) + '</p>' +
         '</div>' +
         '<div class="hl-row__actions">' +
-          '<button class="icon-action" data-action="favorite" title="' + (record.isFavorite ? "Quitar favorito" : "Favorito") + '">' + (record.isFavorite ? "⭐" : "☆") + '</button>' +
-          '<button class="icon-action" data-action="comment" title="Comentario">💬</button>' +
-          '<button class="icon-action" data-action="delete" title="Eliminar">✕</button>' +
+          '<button class="icon-action" data-action="favorite" title="' + (record.isFavorite ? "Quitar favorito" : "Marcar como favorito") + '">' + (record.isFavorite ? "Guardado" : "Favorito") + '</button>' +
+          '<button class="icon-action" data-action="comment" title="Editar comentario">Comentario</button>' +
+          '<button class="icon-action" data-action="delete" title="Eliminar">Eliminar</button>' +
         '</div>';
 
       row.querySelector('[data-action="favorite"]').addEventListener("click", async function() {
@@ -353,7 +353,7 @@
       });
 
       row.querySelector('[data-action="delete"]').addEventListener("click", async function() {
-        const ok = await confirm('¿Eliminar este resaltado?\n"' + ns.truncate(record.selectedText, 60) + '"');
+        const ok = await confirm('Eliminar este resaltado?\n"' + ns.truncate(record.selectedText, 60) + '"');
         if (!ok) return;
         await storage.removeHighlight(currentTab.url, record.id);
         try { await sendMessage({ type: "REMOVE_HIGHLIGHT", highlightId: record.id }); } catch (_e) {}
@@ -384,7 +384,7 @@
     const list = $("note-list");
 
     if (!notes.length) {
-      list.innerHTML = '<p class="empty-state">No hay notas en esta página.</p>';
+      list.innerHTML = '<p class="empty-state">No hay notas en esta pagina.</p>';
       return;
     }
 
@@ -394,16 +394,16 @@
       row.className = "note-row note-row--" + note.color;
       row.innerHTML =
         '<div class="note-row__body">' +
-          '<p class="note-row__title">' + ns.escapeHtml(note.title || "Sin título") + '</p>' +
+          '<p class="note-row__title">' + ns.escapeHtml(note.title || "Sin titulo") + '</p>' +
           (note.text ? '<p class="note-row__text">' + ns.escapeHtml(ns.truncate(note.text, 100)) + '</p>' : '') +
           '<p class="note-row__meta">' + ns.formatDate(note.updatedAt || note.createdAt) + '</p>' +
         '</div>' +
         '<div class="note-row__actions">' +
-          '<button class="icon-action" data-action="delete" title="Eliminar">✕</button>' +
+          '<button class="icon-action" data-action="delete" title="Eliminar">Eliminar</button>' +
         '</div>';
 
       row.querySelector('[data-action="delete"]').addEventListener("click", async function() {
-        const ok = await confirm('¿Eliminar la nota "' + ns.truncate(note.title || "Sin título", 40) + '"?');
+        const ok = await confirm('Eliminar la nota "' + ns.truncate(note.title || "Sin titulo", 40) + '"?');
         if (!ok) return;
         await storage.removeNote(currentTab.url, note.id);
         await refreshNotes();
@@ -423,7 +423,7 @@
     const dashList  = $("dashboard-list");
 
     if (!currentTab) {
-      summary.innerHTML = '<p class="empty-state">Abre una página web.</p>';
+      summary.innerHTML = '<p class="empty-state">Abre una pagina web.</p>';
       dashList.innerHTML = "";
       return;
     }
@@ -441,7 +441,7 @@
     summary.innerHTML =
       '<div class="summary-stat"><span class="summary-stat__num">' + highlights.length + '</span><span class="summary-stat__label">Resaltados</span></div>' +
       '<div class="summary-stat"><span class="summary-stat__num">' + notes.length + '</span><span class="summary-stat__label">Notas</span></div>' +
-      '<div class="summary-stat summary-stat--wide"><span class="summary-stat__label">Colores</span><div class="summary-colors">' + (colorDots || '—') + '</div></div>';
+      '<div class="summary-stat summary-stat--wide"><span class="summary-stat__label">Colores</span><div class="summary-colors">' + (colorDots || 'Sin datos') + '</div></div>';
 
     // Dashboard search
     const q = ($("dash-search").value || "").toLowerCase();
@@ -487,7 +487,7 @@
         const row = document.createElement("div");
         row.className = "note-row note-row--" + note.color;
         row.innerHTML =
-          '<div class="note-row__body"><p class="note-row__title">' + ns.escapeHtml(note.title || "Sin título") + '</p>' +
+          '<div class="note-row__body"><p class="note-row__title">' + ns.escapeHtml(note.title || "Sin titulo") + '</p>' +
           (note.text ? '<p class="note-row__text">' + ns.escapeHtml(ns.truncate(note.text, 80)) + '</p>' : '') + '</div>';
         dashList.appendChild(row);
       });
@@ -504,7 +504,7 @@
     legend.innerHTML = "";
     ns.COLOR_OPTIONS.forEach(function(c) {
       const li = document.createElement("li");
-      li.innerHTML = '<span class="color-dot color-dot--' + c.id + '"></span> <strong>' + ns.escapeHtml(c.circle + " " + c.label) + '</strong>';
+      li.innerHTML = '<span class="color-dot color-dot--' + c.id + '"></span> <strong>' + ns.escapeHtml(c.label) + '</strong>';
       legend.appendChild(li);
     });
   }
@@ -516,7 +516,8 @@
   function applyDarkMode(enabled) {
     document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
     $("btn-dark-mode").title = enabled ? "Modo claro" : "Modo oscuro";
-    $("btn-dark-mode").textContent = enabled ? "☀" : "☽";
+    $("btn-dark-mode").classList.toggle("is-active", enabled);
+    $("btn-dark-mode").setAttribute("aria-pressed", String(enabled));
   }
 
   async function toggleDarkMode() {
@@ -531,6 +532,7 @@
     const next = !s.readingMode;
     await storage.saveSettings({ readingMode: next });
     $("btn-reading-mode").classList.toggle("is-active", next);
+    $("btn-reading-mode").setAttribute("aria-pressed", String(next));
     // Envía señal a la pestaña para ocultar/mostrar las notas
     try { await sendMessage({ type: next ? "HIDE_NOTES" : "RESTORE_NOTES" }); } catch (_e) {}
   }
@@ -544,10 +546,10 @@
     const hl = await storage.getHighlights(currentTab.url);
     if (!hl.length) return setStatus("hl-status", "No hay resaltados para copiar.", true);
     const text = hl.map(function(h, i) {
-      return (i + 1) + ". " + h.selectedText + (h.comment ? "\n   → " + h.comment : "");
+      return (i + 1) + ". " + h.selectedText + (h.comment ? "\n   Comentario: " + h.comment : "");
     }).join("\n\n");
     await navigator.clipboard.writeText(text);
-    setStatus("hl-status", "✓ " + hl.length + " resaltados copiados al portapapeles.");
+    setStatus("hl-status", hl.length + " resaltados copiados al portapapeles.");
   }
 
   async function copyNotes() {
@@ -555,10 +557,10 @@
     const notes = await storage.getNotes(currentTab.url);
     if (!notes.length) return setStatus("note-status", "No hay notas para copiar.", true);
     const text = notes.map(function(n, i) {
-      return (i + 1) + ". [" + (n.title || "Sin título") + "]\n" + (n.text || "");
+      return (i + 1) + ". [" + (n.title || "Sin titulo") + "]\n" + (n.text || "");
     }).join("\n\n---\n\n");
     await navigator.clipboard.writeText(text);
-    setStatus("note-status", "✓ " + notes.length + " notas copiadas al portapapeles.");
+    setStatus("note-status", notes.length + " notas copiadas al portapapeles.");
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -620,7 +622,7 @@
     cloud.innerHTML = "";
 
     if (!tags.length) {
-      cloud.innerHTML = '<p style="font-size:12px;color:var(--ink-3);">Sin etiquetas aún.</p>';
+      cloud.innerHTML = '<p style="font-size:12px;color:var(--ink-3);">Sin etiquetas aun.</p>';
       return;
     }
 
@@ -629,7 +631,7 @@
       chip.className = "tag-chip tag-chip--manage" + (orgFilter === tag ? " is-active" : "");
       chip.innerHTML =
         '<span class="tag-chip__label">' + ns.escapeHtml(tag) + '</span>' +
-        '<button class="tag-chip__del" data-tag="' + ns.escapeHtml(tag) + '" title="Eliminar etiqueta">✕</button>';
+        '<button class="tag-chip__del" data-tag="' + ns.escapeHtml(tag) + '" title="Eliminar etiqueta">Quitar</button>';
 
       chip.querySelector(".tag-chip__label").addEventListener("click", function() {
         orgFilter = (orgFilter === tag) ? "all" : tag;
@@ -663,7 +665,7 @@
   async function refreshOrgList() {
     const list = $("org-hl-list");
     if (!currentTab) {
-      list.innerHTML = '<p class="empty-state">Abre una página web.</p>';
+      list.innerHTML = '<p class="empty-state">Abre una pagina web.</p>';
       return;
     }
 
@@ -719,7 +721,7 @@
           (tagsHtml ? '<div class="hl-row__tags">' + tagsHtml + '</div>' : '<p class="hl-row__meta" style="font-style:italic;">Sin etiquetas</p>') +
         '</div>' +
         '<div class="hl-row__actions">' +
-          '<button class="icon-action" data-action="edit-tags" title="Editar etiquetas">🏷</button>' +
+          '<button class="icon-action" data-action="edit-tags" title="Editar etiquetas">Etiquetas</button>' +
         '</div>';
 
       row.querySelector('[data-action="edit-tags"]').addEventListener("click", function() {
@@ -758,7 +760,7 @@
       chip.className = "tag-chip tag-chip--manage";
       chip.innerHTML =
         '<span class="tag-chip__label">' + ns.escapeHtml(tag) + '</span>' +
-        '<button class="tag-chip__del" title="Quitar">✕</button>';
+        '<button class="tag-chip__del" title="Quitar">Quitar</button>';
       chip.querySelector(".tag-chip__del").addEventListener("click", async function() {
         const next = ((_tagModalRecord.tags || []).filter(function(t) { return t !== tag; }));
         _tagModalRecord = Object.assign({}, _tagModalRecord, { tags: next });
@@ -823,7 +825,7 @@
   }
 
   async function exportFormatted(fmt) {
-    if (!currentTab) return setStatus("export-status", "Sin página activa.", true);
+    if (!currentTab) return setStatus("export-status", "Sin pagina activa.", true);
     const hl    = await storage.getHighlights(currentTab.url);
     const notes = await storage.getNotes(currentTab.url);
     const title = document.title || currentTab.url;
@@ -838,15 +840,15 @@
         hl.forEach(function(h, i) {
           const cat = (ns.COLOR_OPTIONS.find(function(c) { return c.id === h.color; }) || {}).label || h.color;
           content += (i + 1) + ". **[" + cat + "]** " + h.selectedText + "\n";
-          if (h.comment) content += "   > 💬 " + h.comment + "\n";
-          if (h.tags && h.tags.length) content += "   *🏷 " + h.tags.join(", ") + "*\n";
+          if (h.comment) content += "   > Comentario: " + h.comment + "\n";
+          if (h.tags && h.tags.length) content += "   *Etiquetas: " + h.tags.join(", ") + "*\n";
           content += "\n";
         });
       }
       if (notes.length) {
         content += "## Notas\n\n";
         notes.forEach(function(n) {
-          content += "### " + (n.title || "Sin título") + "\n\n" + (n.text || "(vacía)") + "\n\n";
+          content += "### " + (n.title || "Sin titulo") + "\n\n" + (n.text || "(vacia)") + "\n\n";
         });
       }
     } else if (fmt === "txt") {
@@ -855,7 +857,7 @@
         content += "=== RESALTADOS ===\n\n";
         hl.forEach(function(h, i) {
           content += (i + 1) + ". " + h.selectedText + "\n";
-          if (h.comment) content += "   → " + h.comment + "\n";
+          if (h.comment) content += "   Comentario: " + h.comment + "\n";
           if (h.tags && h.tags.length) content += "   [" + h.tags.join(", ") + "]\n";
           content += "\n";
         });
@@ -863,7 +865,7 @@
       if (notes.length) {
         content += "=== NOTAS ===\n\n";
         notes.forEach(function(n) {
-          content += "[" + (n.title || "Sin título") + "]\n" + (n.text || "") + "\n\n";
+          content += "[" + (n.title || "Sin titulo") + "]\n" + (n.text || "") + "\n\n";
         });
       }
     } else { // json
@@ -878,12 +880,12 @@
     a.download = "annotate-" + new Date().toISOString().slice(0, 10) + "." + ext;
     a.click();
     URL.revokeObjectURL(a.href);
-    setStatus("export-status", "✓ Exportado como " + ext.toUpperCase() + ".");
+    setStatus("export-status", "Exportado como " + ext.toUpperCase() + ".");
   }
 
   async function exportAll(fmt) {
     const data = await storage.exportAll();
-    let content = "# Annotate — Todos los resaltados\nExportado: " + new Date().toLocaleString("es-ES") + "\n\n";
+    let content = "# Annotate - Todos los resaltados\nExportado: " + new Date().toLocaleString("es-ES") + "\n\n";
     const byUrl = {};
     (data.highlights || []).forEach(function(h) {
       if (!byUrl[h.url]) byUrl[h.url] = [];
@@ -904,11 +906,11 @@
     a.download = "annotate-all-" + new Date().toISOString().slice(0, 10) + ".md";
     a.click();
     URL.revokeObjectURL(a.href);
-    setStatus("export-status", "✓ Exportación completa lista.");
+    setStatus("export-status", "Exportacion completa preparada.");
   }
 
   async function startFlashcards() {
-    if (!currentTab) { setStatus("fc-status", "Sin página activa.", true); return; }
+    if (!currentTab) { setStatus("fc-status", "Sin pagina activa.", true); return; }
     const colorFilter = $("fc-color-filter").value;
     const mode        = $("fc-mode").value;
     let hl = await storage.getHighlights(currentTab.url);
@@ -961,19 +963,19 @@
     const backFace  = document.getElementById("fc-card-back");
 
     if (mode === "qa" && card.comment) {
-      frontLabel.textContent = "¿Qué dice este fragmento?";
+      frontLabel.textContent = "Pregunta";
       frontText.textContent  = card.comment.trim();
       backText.textContent   = card.selectedText;
     } else {
       const cat = (ns.COLOR_OPTIONS.find(function(c) { return c.id === card.color; }) || {}).label || card.color;
-      frontLabel.textContent = cat + " — ¿Recuerdas este texto?";
-      frontText.textContent  = ns.truncate(card.selectedText, 30).replace(/\S+/g, "█████");
+      frontLabel.textContent = cat + " - Recuerda el contenido";
+      frontText.textContent  = ns.truncate(card.selectedText, 30).replace(/\S+/g, "_____");
       backText.textContent   = card.selectedText;
     }
 
     frontFace.hidden = false;
     backFace.hidden  = true;
-    $("fc-btn-flip").textContent = "Voltear ↩";
+    $("fc-btn-flip").textContent = "Mostrar respuesta";
 
     // Animate
     const cardEl = $("fc-card");
@@ -986,7 +988,7 @@
     _fcFlipped = !_fcFlipped;
     document.getElementById("fc-card-front").hidden = _fcFlipped;
     document.getElementById("fc-card-back").hidden  = !_fcFlipped;
-    $("fc-btn-flip").textContent = _fcFlipped ? "Ver pregunta ↩" : "Voltear ↩";
+    $("fc-btn-flip").textContent = _fcFlipped ? "Mostrar pregunta" : "Mostrar respuesta";
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -1016,7 +1018,7 @@
     a.download = "annotate-backup-" + new Date().toISOString().slice(0, 10) + ".json";
     a.click();
     URL.revokeObjectURL(url);
-    setStatus("dash-status", "✓ Backup exportado.");
+    setStatus("dash-status", "Copia exportada.");
   }
 
   function importData(file, statusId) {
@@ -1026,7 +1028,7 @@
       try {
         const data = JSON.parse(e.target.result);
         const result = await storage.importAll(data);
-        setStatus(statusId, "✓ Importados " + result.highlights + " resaltados y " + result.notes + " notas.");
+        setStatus(statusId, "Importados " + result.highlights + " resaltados y " + result.notes + " notas.");
         await refresh();
       } catch (err) {
         setStatus(statusId, "Error al importar: " + err.message, true);
@@ -1043,7 +1045,7 @@
     await refreshHighlights();
     await refreshNotes();
     if (!currentTab) {
-      $("page-url").textContent = "Página no compatible";
+      $("page-url").textContent = "Pagina no compatible";
       return;
     }
     $("page-url").textContent = currentTab.url;
@@ -1079,6 +1081,7 @@
     updateCustomPreview(settings.customColor);
     applyDarkMode(settings.darkMode);
     $("btn-reading-mode").classList.toggle("is-active", settings.readingMode);
+    $("btn-reading-mode").setAttribute("aria-pressed", String(settings.readingMode));
     $("custom-color-input").value = settings.customColor;
     renderSettings();
     initMoreColorsToggle();
@@ -1110,7 +1113,7 @@
 
     // Highlight action
     $("btn-highlight").addEventListener("click", async function() {
-      setStatus("hl-status", "Trabajando…");
+      setStatus("hl-status", "Trabajando...");
       try {
         const s = await storage.getSettings();
         await ensureTabReady();
@@ -1129,9 +1132,9 @@
       }
     });
 
-    // Nota desde selección
+    // Nota desde seleccion
     $("btn-note-from-sel").addEventListener("click", async function() {
-      setStatus("hl-status", "Trabajando…");
+      setStatus("hl-status", "Trabajando...");
       try {
         const s = await storage.getSettings();
         await ensureTabReady();
@@ -1145,11 +1148,11 @@
 
     // Reaplicar
     $("btn-restore").addEventListener("click", async function() {
-      setStatus("hl-status", "Trabajando…");
+      setStatus("hl-status", "Trabajando...");
       try {
         await ensureTabReady();
         await refresh();
-        setStatus("hl-status", "✓ Resaltados reaplicados.");
+        setStatus("hl-status", "Resaltados reaplicados.");
       } catch (err) {
         setStatus("hl-status", err.message, true);
       }
@@ -1158,20 +1161,20 @@
     // Copiar resaltados
     $("btn-copy-highlights").addEventListener("click", copyHighlights);
 
-    // Limpiar página
+    // Limpiar pagina
     $("btn-clear-page").addEventListener("click", async function() {
-      const ok = await confirm("¿Eliminar todos los resaltados de esta página? Esta acción no se puede deshacer.");
+      const ok = await confirm("Eliminar todos los resaltados de esta pagina? Esta accion no se puede deshacer.");
       if (!ok) return;
-      setStatus("hl-status", "Limpiando…");
+      setStatus("hl-status", "Limpiando...");
       try {
-        if (!currentTab) throw new Error("No hay pestaña activa.");
+        if (!currentTab) throw new Error("No hay pestana activa.");
         await storage.clearHighlights(currentTab.url);
         try {
           await ensureTabReady();
           await sendMessage({ type: "CLEAR_HIGHLIGHTS" });
         } catch (_e) {}
         await refresh();
-        setStatus("hl-status", "✓ Resaltados eliminados.");
+        setStatus("hl-status", "Resaltados eliminados.");
       } catch (err) {
         setStatus("hl-status", err.message, true);
       }
@@ -1185,14 +1188,14 @@
 
     // Crear nota
     $("btn-create-note").addEventListener("click", async function() {
-      setStatus("note-status", "Creando…");
+      setStatus("note-status", "Creando...");
       try {
         const s = await storage.getSettings();
         await ensureTabReady();
         const resp = await sendMessage({ type: "CREATE_NOTE", color: s.noteColor });
         if (!resp || !resp.ok) throw new Error(resp ? resp.error : "Sin respuesta.");
         await refreshNotes();
-        setStatus("note-status", "✓ Nota creada.");
+        setStatus("note-status", "Nota creada.");
       } catch (err) {
         setStatus("note-status", err.message, true);
       }
@@ -1224,7 +1227,7 @@
       e.target.value = "";
     });
 
-    // Escuchar cambios de storage (por si otra pestaña modifica datos)
+    // Escuchar cambios de storage (por si otra pestana modifica datos)
     chrome.storage.onChanged.addListener(function() { void refresh(); });
 
     await refresh();

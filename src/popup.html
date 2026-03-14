@@ -8,235 +8,255 @@
   <link rel="stylesheet" href="./popup.css" />
 </head>
 <body class="popup-shell">
-
-  <!-- ── Header ─────────────────────────────────────────────────────────── -->
   <header class="app-header">
     <div class="app-header__brand">
-      <span class="app-header__logo">✦</span>
-      <span class="app-header__name">Annotate</span>
+      <span class="app-header__mark" aria-hidden="true"></span>
+      <div class="app-header__brand-copy">
+        <p class="app-header__eyebrow">Extension privada</p>
+        <h1 class="app-header__name">Annotate</h1>
+      </div>
     </div>
+
     <div class="app-header__controls">
-      <button id="btn-sidebar" class="icon-btn" title="Panel lateral en página" aria-label="Abrir panel lateral">⊟</button>
-      <button id="btn-dark-mode" class="icon-btn" title="Modo oscuro" aria-label="Alternar modo oscuro">☽</button>
-      <button id="btn-reading-mode" class="icon-btn" title="Modo lectura" aria-label="Modo lectura">⊙</button>
+      <button id="btn-sidebar" class="toolbar-btn" type="button" title="Abrir panel lateral">
+        Panel
+      </button>
+      <button id="btn-dark-mode" class="toolbar-btn" type="button" title="Cambiar tema" aria-pressed="false">
+        Tema
+      </button>
+      <button id="btn-reading-mode" class="toolbar-btn" type="button" title="Alternar visibilidad de notas" aria-pressed="false">
+        Lectura
+      </button>
     </div>
   </header>
 
-  <!-- ── Page context strip ────────────────────────────────────────────── -->
   <div class="page-strip">
-    <span class="page-strip__dot"></span>
-    <span id="page-url" class="page-strip__url">Cargando…</span>
+    <span class="page-strip__label">Pagina actual</span>
+    <span id="page-url" class="page-strip__url">Cargando...</span>
   </div>
 
-  <!-- ── Tab nav ───────────────────────────────────────────────────────── -->
-  <nav class="tab-nav">
-    <button class="tab-btn is-active" data-tab="highlights">
-      <span class="tab-btn__icon">◆</span> Resaltados
+  <nav class="tab-nav" aria-label="Secciones del popup">
+    <button class="tab-btn is-active" data-tab="highlights" type="button">
+      <span class="tab-btn__label">Resaltados</span>
       <span id="hl-count-badge" class="tab-badge">0</span>
     </button>
-    <button class="tab-btn" data-tab="notes">
-      <span class="tab-btn__icon">□</span> Notas
+    <button class="tab-btn" data-tab="notes" type="button">
+      <span class="tab-btn__label">Notas</span>
       <span id="note-count-badge" class="tab-badge tab-badge--soft">0</span>
     </button>
-    <button class="tab-btn" data-tab="organize">
-      <span class="tab-btn__icon">🏷</span> Tags
+    <button class="tab-btn" data-tab="organize" type="button">
+      <span class="tab-btn__label">Organizar</span>
     </button>
-    <button class="tab-btn" data-tab="study">
-      <span class="tab-btn__icon">🎓</span>
+    <button class="tab-btn" data-tab="study" type="button">
+      <span class="tab-btn__label">Estudio</span>
     </button>
-    <button class="tab-btn" data-tab="dashboard">
-      <span class="tab-btn__icon">⊞</span>
+    <button class="tab-btn" data-tab="dashboard" type="button">
+      <span class="tab-btn__label">Resumen</span>
     </button>
-    <button class="tab-btn" data-tab="settings">
-      <span class="tab-btn__icon">⚙</span>
+    <button class="tab-btn" data-tab="settings" type="button">
+      <span class="tab-btn__label">Ajustes</span>
     </button>
   </nav>
 
   <main class="tab-content">
-
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- TAB: HIGHLIGHTS                                                      -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <section id="tab-highlights" class="tab-pane is-active">
-
-      <!-- Color picker -->
       <div class="section-card">
-        <p class="section-label">Color de resaltado</p>
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Resaltado</p>
+            <p class="section-help">Elige el color y aplica el resaltado a la seleccion activa.</p>
+          </div>
+        </div>
+
         <div id="color-grid" class="color-grid"></div>
 
         <div class="custom-color-row">
           <input id="custom-color-input" type="color" value="#facc15" class="color-wheel" />
           <div class="custom-color-preview-wrap">
             <span id="custom-color-preview" class="custom-preview-swatch"></span>
-            <span class="custom-label">Personalizado</span>
+            <div class="custom-color-copy">
+              <span class="custom-label">Color personalizado</span>
+              <span class="custom-caption">Disponible para resaltados</span>
+            </div>
           </div>
-          <button id="btn-use-custom" class="pill-btn">Usar</button>
+          <button id="btn-use-custom" class="pill-btn" type="button">Guardar</button>
         </div>
 
-        <!-- Sección Más colores (colapsable) -->
-        <button id="btn-more-colors" class="more-colors-toggle" aria-expanded="false">
-          <span class="more-colors-toggle__icon">›</span>
-          Más colores
+        <button id="btn-more-colors" class="more-colors-toggle" type="button" aria-expanded="false">
+          <span class="more-colors-toggle__icon" aria-hidden="true"></span>
+          Ver mas colores
         </button>
-        <div id="more-colors-panel" class="more-colors-panel" hidden>
-          <!-- grupos se renderizan con JS -->
+        <div id="more-colors-panel" class="more-colors-panel" hidden></div>
+      </div>
+
+      <div class="action-row action-row--stack-mobile">
+        <button id="btn-highlight" class="primary-btn" type="button">Resaltar seleccion</button>
+        <button id="btn-note-from-sel" class="secondary-btn" type="button">Crear nota desde seleccion</button>
+        <button id="btn-restore" class="secondary-btn secondary-btn--compact" type="button">Reaplicar</button>
+      </div>
+
+      <div class="section-card section-card--soft">
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Lista</p>
+            <p class="section-help">Busca y gestiona los resaltados guardados para esta pagina.</p>
+          </div>
+        </div>
+
+        <div class="search-wrap">
+          <input id="hl-search" type="search" placeholder="Buscar en resaltados..." class="search-input" />
+        </div>
+        <div id="hl-filters" class="filter-chips"></div>
+        <div id="highlight-list" class="item-list">
+          <p class="empty-state">Cargando...</p>
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="action-row">
-        <button id="btn-highlight" class="primary-btn">
-          <span>✦</span> Resaltar selección
-        </button>
-        <button id="btn-note-from-sel" class="secondary-btn" title="Crear nota con el texto seleccionado">
-          📝
-        </button>
-        <button id="btn-restore" class="secondary-btn" title="Reaplicar resaltados">↺</button>
-      </div>
-
-      <!-- Search -->
-      <div class="search-wrap">
-        <input id="hl-search" type="search" placeholder="Buscar en resaltados…" class="search-input" />
-      </div>
-
-      <!-- Filter chips -->
-      <div id="hl-filters" class="filter-chips"></div>
-
-      <!-- List -->
-      <div id="highlight-list" class="item-list">
-        <p class="empty-state">Cargando…</p>
-      </div>
-
-      <!-- Danger zone -->
       <div class="danger-row">
-        <button id="btn-copy-highlights" class="ghost-btn">📋 Copiar todos</button>
-        <button id="btn-clear-page" class="ghost-btn ghost-btn--danger">🗑️ Limpiar página</button>
+        <button id="btn-copy-highlights" class="ghost-btn" type="button">Copiar resaltados</button>
+        <button id="btn-clear-page" class="ghost-btn ghost-btn--danger" type="button">Eliminar todos</button>
       </div>
 
       <p id="hl-status" class="status-line">Listo.</p>
     </section>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- TAB: NOTES                                                           -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <section id="tab-notes" class="tab-pane">
-
-      <!-- Note color picker -->
       <div class="section-card">
-        <p class="section-label">Color de nota</p>
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Notas</p>
+            <p class="section-help">Crea notas flotantes y selecciona el color base antes de insertarlas.</p>
+          </div>
+        </div>
+
         <div id="note-color-grid" class="note-swatch-row"></div>
       </div>
 
       <div class="action-row">
-        <button id="btn-create-note" class="primary-btn">
-          <span>+</span> Nueva nota
-        </button>
-        <button id="btn-copy-notes" class="secondary-btn" title="Copiar todas las notas">📋</button>
+        <button id="btn-create-note" class="primary-btn" type="button">Nueva nota</button>
+        <button id="btn-copy-notes" class="secondary-btn" type="button">Copiar notas</button>
       </div>
 
-      <!-- Notes list from storage -->
-      <div id="note-list" class="item-list">
-        <p class="empty-state">Cargando…</p>
+      <div class="section-card section-card--soft">
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Notas guardadas</p>
+            <p class="section-help">Visualiza las notas de esta pagina y elimina las que ya no necesites.</p>
+          </div>
+        </div>
+
+        <div id="note-list" class="item-list">
+          <p class="empty-state">Cargando...</p>
+        </div>
       </div>
 
       <p id="note-status" class="status-line">Listo.</p>
     </section>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- TAB: ORGANIZE (tags & folders)                                       -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <section id="tab-organize" class="tab-pane">
-
-      <!-- Tag manager -->
       <div class="section-card">
-        <p class="section-label">Carpetas / Etiquetas</p>
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Etiquetas</p>
+            <p class="section-help">Crea etiquetas para clasificar los resaltados de forma mas ordenada.</p>
+          </div>
+        </div>
+
         <div class="tag-input-row">
-          <input id="tag-input" type="text" placeholder="Nueva etiqueta… ej. IA, tesis, ideas" class="search-input" maxlength="32" />
-          <button id="btn-add-tag" class="pill-btn">+ Añadir</button>
+          <input id="tag-input" type="text" placeholder="Nueva etiqueta..." class="search-input" maxlength="32" />
+          <button id="btn-add-tag" class="pill-btn" type="button">Anadir</button>
         </div>
         <div id="tag-cloud" class="tag-cloud"></div>
       </div>
 
-      <!-- Highlights with tag management -->
-      <div class="section-card">
-        <p class="section-label">Resaltados por etiqueta</p>
-        <div class="search-wrap">
-          <input id="org-search" type="search" placeholder="Buscar…" class="search-input" />
+      <div class="section-card section-card--soft">
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Resaltados por etiqueta</p>
+            <p class="section-help">Filtra y revisa contenido agrupado por etiquetas.</p>
+          </div>
         </div>
-        <div id="org-filter-chips" class="filter-chips" style="margin-bottom:8px;"></div>
+
+        <div class="search-wrap">
+          <input id="org-search" type="search" placeholder="Buscar..." class="search-input" />
+        </div>
+        <div id="org-filter-chips" class="filter-chips"></div>
         <div id="org-hl-list" class="item-list">
-          <p class="empty-state">Cargando…</p>
+          <p class="empty-state">Cargando...</p>
         </div>
       </div>
 
       <p id="org-status" class="status-line"></p>
     </section>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- TAB: STUDY (flashcards + export)                                     -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <section id="tab-study" class="tab-pane">
-
-      <!-- Export section -->
       <div class="section-card">
-        <p class="section-label">Exportar página actual</p>
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Exportacion</p>
+            <p class="section-help">Exporta los datos de la pagina actual en distintos formatos.</p>
+          </div>
+        </div>
+
         <div class="export-grid">
-          <button id="btn-export-md"  class="export-card">
-            <span class="export-card__icon">Md</span>
+          <button id="btn-export-md" class="export-card" type="button">
+            <span class="export-card__icon">MD</span>
             <span class="export-card__label">Markdown</span>
           </button>
-          <button id="btn-export-txt" class="export-card">
-            <span class="export-card__icon">Txt</span>
+          <button id="btn-export-txt" class="export-card" type="button">
+            <span class="export-card__icon">TXT</span>
             <span class="export-card__label">Texto</span>
           </button>
-          <button id="btn-export-json-page" class="export-card">
-            <span class="export-card__icon">{}</span>
-            <span class="export-card__label">JSON</span>
+          <button id="btn-export-json-page" class="export-card" type="button">
+            <span class="export-card__icon">JSON</span>
+            <span class="export-card__label">Datos</span>
           </button>
-          <button id="btn-export-all-md" class="export-card">
-            <span class="export-card__icon">⊞</span>
-            <span class="export-card__label">Todo MD</span>
+          <button id="btn-export-all-md" class="export-card" type="button">
+            <span class="export-card__icon">ALL</span>
+            <span class="export-card__label">Todo</span>
           </button>
         </div>
-        <p id="export-status" class="status-line" style="margin-top:6px;"></p>
+        <p id="export-status" class="status-line"></p>
       </div>
 
-      <!-- Flashcard section -->
-      <div class="section-card">
-        <p class="section-label">Modo estudio — Flashcards</p>
-
-        <!-- Config view -->
-        <div id="fc-config" class="">
-          <div class="fc-config-row">
-            <label class="fc-field-label">Color/categoría</label>
-            <select id="fc-color-filter" class="fc-select">
-              <option value="all">Todos los colores</option>
-              <option value="green">🟢 Idea clave</option>
-              <option value="blue">🔵 Info</option>
-              <option value="purple">🟣 Duda</option>
-              <option value="orange">🟠 Repasar</option>
-              <option value="red">🔴 Importante</option>
-              <option value="yellow">🟡 Amarillo</option>
-            </select>
+      <div class="section-card section-card--soft">
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Modo estudio</p>
+            <p class="section-help">Genera tarjetas a partir de los resaltados guardados.</p>
           </div>
-          <div class="fc-config-row">
-            <label class="fc-field-label">Modo</label>
-            <select id="fc-mode" class="fc-select">
-              <option value="recall">Recordar (ver texto oculto)</option>
-              <option value="qa">Pregunta → Respuesta (usa comentario)</option>
-            </select>
-          </div>
-          <button id="btn-start-fc" class="primary-btn" style="width:100%;margin-top:10px;">
-            🎓 Empezar flashcards
-          </button>
-          <p id="fc-status" class="status-line" style="margin-top:6px;"></p>
         </div>
 
-        <!-- Active flashcard view -->
+        <div id="fc-config">
+          <div class="fc-config-row">
+            <label class="fc-field-label" for="fc-color-filter">Filtro</label>
+            <select id="fc-color-filter" class="fc-select">
+              <option value="all">Todos los colores</option>
+              <option value="green">Idea clave</option>
+              <option value="blue">Informacion</option>
+              <option value="purple">Duda</option>
+              <option value="orange">Repasar</option>
+              <option value="red">Importante</option>
+              <option value="yellow">Amarillo</option>
+            </select>
+          </div>
+          <div class="fc-config-row">
+            <label class="fc-field-label" for="fc-mode">Modo</label>
+            <select id="fc-mode" class="fc-select">
+              <option value="recall">Recordar contenido</option>
+              <option value="qa">Comentario a respuesta</option>
+            </select>
+          </div>
+          <button id="btn-start-fc" class="primary-btn primary-btn--full" type="button">Iniciar estudio</button>
+          <p id="fc-status" class="status-line"></p>
+        </div>
+
         <div id="fc-active" hidden>
           <div class="fc-progress-row">
             <span id="fc-progress-text" class="fc-progress-text">1 / 1</span>
-            <div class="fc-progress-bar"><div id="fc-progress-fill" class="fc-progress-fill" style="width:0%"></div></div>
+            <div class="fc-progress-bar">
+              <div id="fc-progress-fill" class="fc-progress-fill" style="width:0%"></div>
+            </div>
           </div>
 
           <div id="fc-card" class="fc-card">
@@ -251,38 +271,43 @@
           </div>
 
           <div class="fc-btn-row">
-            <button id="fc-btn-flip" class="primary-btn" style="flex:2;">Voltear ↩</button>
-            <button id="fc-btn-prev" class="secondary-btn" style="flex:1;">‹</button>
-            <button id="fc-btn-next" class="secondary-btn" style="flex:1;">›</button>
+            <button id="fc-btn-flip" class="primary-btn" type="button">Mostrar respuesta</button>
+            <button id="fc-btn-prev" class="secondary-btn" type="button">Anterior</button>
+            <button id="fc-btn-next" class="secondary-btn" type="button">Siguiente</button>
           </div>
-          <button id="fc-btn-stop" class="ghost-btn" style="width:100%;margin-top:6px;">✕ Terminar</button>
+          <button id="fc-btn-stop" class="ghost-btn ghost-btn--full" type="button">Finalizar sesion</button>
         </div>
       </div>
-
     </section>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- TAB: DASHBOARD (all data)                                            -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <section id="tab-dashboard" class="tab-pane">
       <div class="section-card">
-        <p class="section-label">Resumen de esta página</p>
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Resumen</p>
+            <p class="section-help">Vista general de los datos guardados en la pagina activa.</p>
+          </div>
+        </div>
         <div id="page-summary" class="summary-grid"></div>
       </div>
 
-      <div class="section-card">
+      <div class="section-card section-card--soft">
         <div class="section-card__header">
-          <p class="section-label">Todo guardado</p>
+          <div>
+            <p class="section-label">Datos guardados</p>
+            <p class="section-help">Busca y exporta todo el contenido asociado a la pagina.</p>
+          </div>
           <div class="dashboard-actions">
-            <button id="btn-export" class="ghost-btn">⬇ Exportar</button>
-            <label id="btn-import-label" class="ghost-btn" style="cursor:pointer;">
-              ⬆ Importar
-              <input id="btn-import" type="file" accept=".json" style="display:none;" />
+            <button id="btn-export" class="ghost-btn" type="button">Exportar</button>
+            <label id="btn-import-label" class="ghost-btn ghost-btn--label">
+              Importar
+              <input id="btn-import" type="file" accept=".json" hidden />
             </label>
           </div>
         </div>
+
         <div class="search-wrap">
-          <input id="dash-search" type="search" placeholder="Buscar en todo…" class="search-input" />
+          <input id="dash-search" type="search" placeholder="Buscar en todo..." class="search-input" />
         </div>
         <div id="dashboard-list" class="item-list"></div>
       </div>
@@ -290,74 +315,85 @@
       <p id="dash-status" class="status-line"></p>
     </section>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- TAB: SETTINGS                                                        -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <section id="tab-settings" class="tab-pane">
       <div class="section-card">
-        <p class="section-label">Atajos de teclado</p>
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Atajos</p>
+            <p class="section-help">Combinaciones utiles para trabajar mas rapido sobre la pagina.</p>
+          </div>
+        </div>
+
         <ul class="shortcut-list">
-          <li><kbd>Alt+H</kbd> Resaltar selección</li>
-          <li><kbd>Alt+N</kbd> Nueva nota</li>
-          <li><kbd>Alt+Q</kbd> Nota desde selección</li>
+          <li><kbd>Alt+H</kbd> Resaltar seleccion</li>
+          <li><kbd>Alt+N</kbd> Crear nota</li>
+          <li><kbd>Alt+Q</kbd> Nota desde seleccion</li>
           <li><kbd>Alt+Click</kbd> Eliminar resaltado</li>
         </ul>
       </div>
 
-      <div class="section-card">
-        <p class="section-label">Categorías de color</p>
+      <div class="section-card section-card--soft">
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Colores</p>
+            <p class="section-help">Referencia de la paleta usada para resaltar contenido.</p>
+          </div>
+        </div>
+
         <ul class="category-legend" id="category-legend"></ul>
       </div>
 
       <div class="section-card">
-        <p class="section-label">Datos</p>
+        <div class="section-card__header">
+          <div>
+            <p class="section-label">Backups</p>
+            <p class="section-help">Exporta o importa una copia completa de tus datos.</p>
+          </div>
+        </div>
+
         <div class="action-row action-row--col">
-          <button id="btn-export-settings" class="secondary-btn">⬇ Exportar todo</button>
-          <label class="secondary-btn" style="cursor:pointer;text-align:center;">
-            ⬆ Importar backup
-            <input id="btn-import-settings" type="file" accept=".json" style="display:none;" />
+          <button id="btn-export-settings" class="secondary-btn" type="button">Exportar copia</button>
+          <label class="secondary-btn secondary-btn--label">
+            Importar copia
+            <input id="btn-import-settings" type="file" accept=".json" hidden />
           </label>
         </div>
       </div>
     </section>
-
   </main>
 
-  <!-- ── Confirmation modal ────────────────────────────────────────────── -->
   <div id="confirm-modal" class="modal-backdrop" hidden>
     <div class="modal-card">
       <p id="confirm-message" class="modal-message"></p>
       <div class="modal-actions">
-        <button id="confirm-cancel" class="secondary-btn">Cancelar</button>
-        <button id="confirm-ok" class="primary-btn primary-btn--danger">Eliminar</button>
+        <button id="confirm-cancel" class="secondary-btn" type="button">Cancelar</button>
+        <button id="confirm-ok" class="primary-btn primary-btn--danger" type="button">Eliminar</button>
       </div>
     </div>
   </div>
 
-  <!-- ── Comment editor modal ─────────────────────────────────────────── -->
   <div id="comment-modal" class="modal-backdrop" hidden>
     <div class="modal-card">
       <p class="modal-message">Comentario del resaltado</p>
-      <textarea id="comment-textarea" class="comment-textarea" placeholder="Añade una nota sobre este resaltado…" rows="4"></textarea>
+      <textarea id="comment-textarea" class="comment-textarea" placeholder="Anade una nota sobre este resaltado..." rows="4"></textarea>
       <div class="modal-actions">
-        <button id="comment-cancel" class="secondary-btn">Cancelar</button>
-        <button id="comment-save" class="primary-btn">Guardar</button>
+        <button id="comment-cancel" class="secondary-btn" type="button">Cancelar</button>
+        <button id="comment-save" class="primary-btn" type="button">Guardar</button>
       </div>
     </div>
   </div>
 
-  <!-- ── Tag editor modal ─────────────────────────────────────────────── -->
   <div id="tag-modal" class="modal-backdrop" hidden>
     <div class="modal-card">
       <p class="modal-message">Editar etiquetas del resaltado</p>
-      <p id="tag-modal-text" class="hl-row__comment" style="margin-bottom:8px;"></p>
+      <p id="tag-modal-text" class="modal-support"></p>
       <div class="tag-input-row">
-        <input id="tag-modal-input" type="text" placeholder="Nueva etiqueta…" class="comment-textarea" style="height:38px;resize:none;padding:8px 12px;" maxlength="32" />
-        <button id="tag-modal-add" class="primary-btn" style="white-space:nowrap;">+ Añadir</button>
+        <input id="tag-modal-input" type="text" placeholder="Nueva etiqueta..." class="search-input" maxlength="32" />
+        <button id="tag-modal-add" class="pill-btn" type="button">Anadir</button>
       </div>
-      <div id="tag-modal-chips" class="tag-cloud" style="margin-top:8px;"></div>
+      <div id="tag-modal-chips" class="tag-cloud"></div>
       <div class="modal-actions">
-        <button id="tag-modal-close" class="secondary-btn">Cerrar</button>
+        <button id="tag-modal-close" class="secondary-btn" type="button">Cerrar</button>
       </div>
     </div>
   </div>

@@ -12,15 +12,15 @@
 
   // ── Colores de resaltado ──────────────────────────────────────────────────
   ns.COLOR_OPTIONS = [
-    { id: "yellow",  label: "Amarillo",  circle: "🟡", category: "general"   },
-    { id: "green",   label: "Idea clave",circle: "🟢", category: "idea"      },
-    { id: "blue",    label: "Info",      circle: "🔵", category: "info"      },
-    { id: "pink",    label: "Rosa",      circle: "🩷", category: "general"   },
-    { id: "orange",  label: "Repasar",   circle: "🟠", category: "review"    },
-    { id: "purple",  label: "Duda",      circle: "🟣", category: "question"  },
-    { id: "teal",    label: "Turquesa",  circle: "🔹", category: "general"   },
-    { id: "red",     label: "Importante",circle: "🔴", category: "important" },
-    { id: "gray",    label: "Gris",      circle: "⚪", category: "general"   }
+    { id: "yellow",  label: "Amarillo",  circle: "", category: "general"   },
+    { id: "green",   label: "Idea clave",circle: "", category: "idea"      },
+    { id: "blue",    label: "Info",      circle: "", category: "info"      },
+    { id: "pink",    label: "Rosa",      circle: "", category: "general"   },
+    { id: "orange",  label: "Repasar",   circle: "", category: "review"    },
+    { id: "purple",  label: "Duda",      circle: "", category: "question"  },
+    { id: "teal",    label: "Turquesa",  circle: "", category: "general"   },
+    { id: "red",     label: "Importante",circle: "", category: "important" },
+    { id: "gray",    label: "Gris",      circle: "", category: "general"   }
   ];
 
   // ── Colores extra de resaltado (sección "Más colores") ───────────────────

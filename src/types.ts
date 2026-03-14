@@ -80,14 +80,14 @@ namespace PersistentHighlighter {
   export const DYNAMIC_RESTORE_DELAY_MS = 700;
   export const DEFAULT_COLOR: HighlightColor = "yellow";
   export const COLOR_OPTIONS: Array<{ id: HighlightPresetColor; label: string; circle: string }> = [
-    { id: "yellow", label: "Amarillo", circle: "🟡" },
-    { id: "green", label: "Verde", circle: "🟢" },
-    { id: "blue", label: "Azul", circle: "🔵" },
-    { id: "pink", label: "Rosa", circle: "🩷" },
-    { id: "orange", label: "Naranja", circle: "🟠" },
-    { id: "purple", label: "Morado", circle: "🟣" },
-    { id: "teal", label: "Turquesa", circle: "🔹" },
-    { id: "gray", label: "Gris", circle: "⚪" }
+    { id: "yellow", label: "Amarillo", circle: "" },
+    { id: "green", label: "Verde", circle: "" },
+    { id: "blue", label: "Azul", circle: "" },
+    { id: "pink", label: "Rosa", circle: "" },
+    { id: "orange", label: "Naranja", circle: "" },
+    { id: "purple", label: "Morado", circle: "" },
+    { id: "teal", label: "Turquesa", circle: "" },
+    { id: "gray", label: "Gris", circle: "" }
   ];
   export const NOTE_COLOR_OPTIONS: Array<{ id: NoteColor; label: string }> = [
     { id: "yellow", label: "Amarillo" },
