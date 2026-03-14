@@ -142,7 +142,8 @@
       customColor:   ns.sanitizeColorHex(s.customColor),
       noteColor:     s.noteColor     || "yellow",
       darkMode:      Boolean(s.darkMode),
-      readingMode:   Boolean(s.readingMode)
+      readingMode:   Boolean(s.readingMode),
+      globalTags:    Array.isArray(s.globalTags) ? s.globalTags : []
     };
   };
 

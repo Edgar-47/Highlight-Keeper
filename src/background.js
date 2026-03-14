@@ -68,9 +68,9 @@
   // Inyecta CSS y scripts en la pestaña activa si no están ya cargados
   function injectIntoTab(tabId) {
     return new Promise(function(resolve, reject) {
-      chrome.scripting.insertCSS({ target: { tabId }, files: ["src/styles.css"] }, function() {
+      chrome.scripting.insertCSS({ target: { tabId }, files: ["src/styles.css", "src/sidebar.css"] }, function() {
         chrome.scripting.executeScript(
-          { target: { tabId }, files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js"] },
+          { target: { tabId }, files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js", "src/sidebar.js"] },
           function() {
             if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
             resolve();
