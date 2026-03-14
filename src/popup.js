@@ -1007,7 +1007,7 @@
     }
   }
 
-
+  async function exportData() {
     const data = await storage.exportAll();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url  = URL.createObjectURL(blob);

@@ -76,8 +76,10 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   color: var(--text);
   font-family: "Segoe UI Variable", "Trebuchet MS", sans-serif;
+  text-rendering: optimizeLegibility;
   background:
     radial-gradient(circle at 10% 10%, rgba(246, 196, 69, 0.12), transparent 18rem),
     radial-gradient(circle at 90% 15%, rgba(95, 133, 255, 0.12), transparent 16rem),
@@ -88,6 +90,12 @@ body {
 /* Enlaces neutros */
 a {
   color: inherit;
+}
+
+/* Imagenes seguras */
+img {
+  display: block;
+  max-width: 100%;
 }
 
 /* Mejor toque en movil */
@@ -101,6 +109,48 @@ a:focus-visible,
 button:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+/* Seleccion legible */
+::selection {
+  color: #16110d;
+  background: rgba(246, 196, 69, 0.7);
+}
+
+/* Salto rapido */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 80;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--bg-strong);
+  color: var(--text);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  text-decoration: none;
+  transform: translateY(-140%);
+  transition: transform 180ms ease;
+}
+
+/* Salto visible con teclado */
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Aviso sin JS */
+.no-js-banner {
+  position: relative;
+  z-index: 60;
+  margin: 16px auto 0;
+  width: min(1200px, calc(100% - 32px));
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--bg-strong);
+  box-shadow: var(--shadow-soft);
+  line-height: 1.6;
 }
 
 /* Barra de lectura */
@@ -163,6 +213,7 @@ button:focus-visible {
   width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 56px;
+  isolation: isolate;
 }
 
 /* Separacion del main */
@@ -181,6 +232,16 @@ button:focus-visible {
   border-radius: 30px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(20px);
+}
+
+/* Fallback si no hay blur */
+@supports not (backdrop-filter: blur(20px)) {
+  .hero,
+  .section,
+  .footer,
+  .floating-chip {
+    backdrop-filter: none;
+  }
 }
 
 /* Hero */
@@ -373,6 +434,7 @@ button:focus-visible {
   margin: 0;
   letter-spacing: -0.05em;
   line-height: 0.96;
+  text-wrap: balance;
 }
 
 /* Titulo principal */
@@ -701,6 +763,16 @@ button:focus-visible {
   box-shadow: var(--shadow-soft);
 }
 
+/* Parrafos resistentes */
+.feature-card p,
+.architecture-card p,
+.stack-panel p,
+.section-heading p,
+.journey-list,
+.footer__meta {
+  overflow-wrap: anywhere;
+}
+
 /* Tarjetas simples */
 .feature-card,
 .architecture-card,
@@ -851,6 +923,15 @@ button:focus-visible {
   filter: blur(0);
 }
 
+/* Menos movimiento en tactil */
+@media (hover: none) {
+  .theme-toggle:hover,
+  .button:hover,
+  .topbar__links a:hover {
+    transform: none;
+  }
+}
+
 /* Tarjetas con tilt */
 [data-tilt] {
   transform-style: preserve-3d;
@@ -901,6 +982,11 @@ button:focus-visible {
   .page-shell {
     width: min(100% - 20px, 1200px);
     padding-top: 12px;
+  }
+
+  /* Aviso alineado */
+  .no-js-banner {
+    width: min(100% - 20px, 1200px);
   }
 
   /* Tarjetas mas compactas */

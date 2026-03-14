@@ -14,8 +14,15 @@
       content="Landing page de una extension de navegador para guardar subrayados persistentes y notas post-it sobre cualquier pagina web."
     />
 
+    <!-- Evita enviar referrer a terceros -->
+    <meta name="referrer" content="no-referrer" />
+
+    <!-- Mejora la experiencia movil -->
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+
     <!-- Tema compatible con claro y oscuro -->
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#17130f" />
 
     <!-- Estilos globales -->
     <link rel="stylesheet" href="./site.css" />
@@ -24,6 +31,16 @@
     <script src="./script.js" defer></script>
   </head>
   <body>
+    <!-- Salto rapido al contenido -->
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <!-- Aviso si no hay JS -->
+    <noscript>
+      <div class="no-js-banner">
+        El modo de tema y las animaciones necesitan JavaScript, pero la pagina sigue siendo usable.
+      </div>
+    </noscript>
+
     <!-- Fondo decorativo -->
     <div class="bg-orb bg-orb--one" aria-hidden="true"></div>
     <div class="bg-orb bg-orb--two" aria-hidden="true"></div>
@@ -40,7 +57,14 @@
         <nav class="topbar" aria-label="Navegacion principal">
           <!-- Marca -->
           <a class="brand" href="#inicio" aria-label="Ir al inicio">
-            <img src="./icons/icon128.png" alt="Logo de la extension" class="brand__icon" />
+            <img
+              src="./icons/icon128.png"
+              alt="Logo de la extension"
+              class="brand__icon"
+              width="52"
+              height="52"
+              decoding="async"
+            />
             <span class="brand__text">
               <strong>Resaltador Persistente</strong>
               <span>Subrayados y notas sobre la web</span>
@@ -58,7 +82,14 @@
             </div>
 
             <!-- Boton de tema -->
-            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">
+            <button
+              class="theme-toggle"
+              id="themeToggle"
+              type="button"
+              aria-label="Cambiar tema"
+              aria-controls="contenido"
+              aria-pressed="false"
+            >
               <span class="theme-toggle__icon" aria-hidden="true">&#9680;</span>
               <span class="theme-toggle__label">Modo oscuro</span>
             </button>
@@ -93,6 +124,7 @@
                 href="https://github.com/Edgar-47/Playground"
                 target="_blank"
                 rel="noopener noreferrer"
+                referrerpolicy="no-referrer"
               >
                 Ver repositorio
               </a>
@@ -110,7 +142,7 @@
                 <span>capas tecnicas bien separadas</span>
               </li>
               <li class="metric-card reveal" data-delay="200">
-                <strong data-counter="100">0</strong>
+                <strong data-counter="100" data-counter-suffix="%">0</strong>
                 <span>persistencia local por URL</span>
               </li>
             </ul>
@@ -169,14 +201,14 @@
             </div>
 
             <!-- Chips flotantes -->
-            <div class="floating-chip floating-chip--one">chrome.storage.local</div>
-            <div class="floating-chip floating-chip--two">Popup + Content Script</div>
+            <div class="floating-chip floating-chip--one" aria-hidden="true">chrome.storage.local</div>
+            <div class="floating-chip floating-chip--two" aria-hidden="true">Popup + Content Script</div>
           </div>
         </section>
       </header>
 
       <!-- Contenido principal -->
-      <main class="main-content">
+      <main class="main-content" id="contenido" tabindex="-1">
         <!-- Bloque de funciones -->
         <section class="section reveal" id="funciones">
           <!-- Encabezado de seccion -->
@@ -352,6 +384,7 @@
             href="https://github.com/Edgar-47/Playground"
             target="_blank"
             rel="noopener noreferrer"
+            referrerpolicy="no-referrer"
           >
             Abrir repositorio
           </a>
@@ -360,6 +393,7 @@
             href="https://github.com/Edgar-47"
             target="_blank"
             rel="noopener noreferrer"
+            referrerpolicy="no-referrer"
           >
             Ir a mi GitHub
           </a>
@@ -367,8 +401,15 @@
 
         <!-- Enlaces cortos -->
         <div class="footer__meta">
-          <a href="https://github.com/Edgar-47" target="_blank" rel="noopener noreferrer">github.com/Edgar-47</a>
-          <a href="https://github.com/Edgar-47/Playground" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/Edgar-47" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
+            github.com/Edgar-47
+          </a>
+          <a
+            href="https://github.com/Edgar-47/Playground"
+            target="_blank"
+            rel="noopener noreferrer"
+            referrerpolicy="no-referrer"
+          >
             github.com/Edgar-47/Playground
           </a>
           <span id="yearLabel">2026</span>
