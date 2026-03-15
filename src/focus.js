@@ -658,15 +658,15 @@
 
   FocusOverlay.prototype._renderSegmentMarkup = function _renderSegmentMarkup(segments, suffix, showDots) {
     const values = Array.isArray(segments) ? segments : [segments];
-    const parts = values.map(function(value) {
-      return '<span class="ph-focus__segment">' + value + "</span>";
-    });
+    const parts = [];
 
-    if (showDots) {
-      for (let index = 1; index < parts.length; index += 1) {
-        parts.splice(index * 2 - 1, 0, '<span class="ph-focus__divider">:</span>');
+    values.forEach(function(value, index) {
+      if (showDots && index > 0) {
+        parts.push('<span class="ph-focus__divider">:</span>');
       }
-    }
+
+      parts.push('<span class="ph-focus__segment">' + value + "</span>");
+    });
 
     return '<div class="ph-focus__segment-row">' + parts.join("") + "</div>" +
       (suffix ? '<span class="ph-focus__suffix">' + suffix + "</span>" : "");
