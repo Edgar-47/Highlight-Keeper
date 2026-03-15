@@ -6,6 +6,7 @@
   const storage = new ns.HighlightStorage();
   const renderer  = new ns.HighlightRenderer(storage);
   const notesBoard = new ns.NotesBoard(storage);
+  const focusOverlay = new ns.FocusOverlay(storage);
 
   // ── Manejador central de mensajes ─────────────────────────────────────────
   async function handleMessage(msg) {
@@ -46,6 +47,10 @@
       case "PATCH_HIGHLIGHT": {
         const updated = await storage.patchHighlight(window.location.href, msg.highlightId, msg.patch);
         return { ok: true, data: { updated } };
+      }
+      case "FOCUS_ACTION": {
+        const focusState = await focusOverlay.handleAction(msg.action, msg.payload);
+        return { ok: true, data: { focusState: focusState } };
       }
       default:
         return { ok: false, error: "Tipo de mensaje no soportado." };
@@ -91,6 +96,7 @@
     try {
       await renderer.restoreHighlightsForCurrentPage();
       await notesBoard.restoreNotesForCurrentPage();
+      await focusOverlay.restore();
       renderer.observeDynamicContent();
       notesBoard.observeViewport();
     } catch (err) {

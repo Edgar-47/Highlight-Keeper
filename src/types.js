@@ -5,6 +5,7 @@
   ns.STORAGE_KEY        = "annotate.recordsByUrl";
   ns.NOTES_STORAGE_KEY  = "annotate.notesByUrl";
   ns.SETTINGS_KEY       = "annotate.settings";
+  ns.FOCUS_STORAGE_KEY  = "annotate.focusState";
   ns.HIGHLIGHT_CLASS    = "ph-highlight";
   ns.HIGHLIGHT_ATTR     = "data-ph-id";
   ns.DYNAMIC_RESTORE_DELAY_MS = 700;
@@ -142,6 +143,171 @@
   ns.sanitizeColorHex = function sanitizeColorHex(rawColor) {
     const v = String(rawColor || "").trim();
     return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : "#facc15";
+  };
+
+  function clampNumber(value, min, max, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.min(Math.max(numeric, min), max);
+  }
+
+  function normalizeInteger(value, min, max, fallback) {
+    return Math.round(clampNumber(value, min, max, fallback));
+  }
+
+  function normalizeMs(value, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric < 0) return fallback;
+    return Math.round(numeric);
+  }
+
+  function normalizeTimestamp(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && numeric > 0 ? Math.round(numeric) : null;
+  }
+
+  function normalizeMode(value) {
+    const mode = String(value || "");
+    return ["clock", "stopwatch", "countdown", "breakCycle", "study"].includes(mode) ? mode : "clock";
+  }
+
+  function normalizeLayout(value) {
+    const layout = String(value || "");
+    return ["stacked", "split", "minimal"].includes(layout) ? layout : "stacked";
+  }
+
+  function normalizePhase(value) {
+    const phase = String(value || "");
+    return ["focus", "break", "longBreak"].includes(phase) ? phase : "focus";
+  }
+
+  function getCountdownDefaults() {
+    return {
+      durationMinutes: 25,
+      remainingMs: 25 * 60 * 1000,
+      endsAt: null,
+      isRunning: false
+    };
+  }
+
+  function getCycleDefaults(kind) {
+    if (kind === "breakCycle") {
+      return {
+        focusMinutes: 52,
+        breakMinutes: 17,
+        longBreakMinutes: 30,
+        rounds: 4,
+        currentRound: 1,
+        phase: "focus",
+        remainingMs: 52 * 60 * 1000,
+        endsAt: null,
+        isRunning: false
+      };
+    }
+
+    return {
+      focusMinutes: 25,
+      breakMinutes: 5,
+      longBreakMinutes: 15,
+      rounds: 4,
+      currentRound: 1,
+      phase: "focus",
+      remainingMs: 25 * 60 * 1000,
+      endsAt: null,
+      isRunning: false
+    };
+  }
+
+  function normalizeCountdown(raw) {
+    const defaults = getCountdownDefaults();
+    const durationMinutes = normalizeInteger(raw && raw.durationMinutes, 1, 600, defaults.durationMinutes);
+    const fallbackRemaining = durationMinutes * 60 * 1000;
+    return {
+      durationMinutes: durationMinutes,
+      remainingMs: normalizeMs(raw && raw.remainingMs, fallbackRemaining),
+      endsAt: normalizeTimestamp(raw && raw.endsAt),
+      isRunning: Boolean(raw && raw.isRunning)
+    };
+  }
+
+  function normalizeCycle(raw, kind) {
+    const defaults = getCycleDefaults(kind);
+    const focusMinutes = normalizeInteger(raw && raw.focusMinutes, 1, 600, defaults.focusMinutes);
+    const breakMinutes = normalizeInteger(raw && raw.breakMinutes, 1, 180, defaults.breakMinutes);
+    const longBreakMinutes = normalizeInteger(raw && raw.longBreakMinutes, 1, 240, defaults.longBreakMinutes);
+    const rounds = normalizeInteger(raw && raw.rounds, 1, 12, defaults.rounds);
+    return {
+      focusMinutes: focusMinutes,
+      breakMinutes: breakMinutes,
+      longBreakMinutes: longBreakMinutes,
+      rounds: rounds,
+      currentRound: normalizeInteger(raw && raw.currentRound, 1, rounds, defaults.currentRound),
+      phase: normalizePhase(raw && raw.phase),
+      remainingMs: normalizeMs(raw && raw.remainingMs, focusMinutes * 60 * 1000),
+      endsAt: normalizeTimestamp(raw && raw.endsAt),
+      isRunning: Boolean(raw && raw.isRunning)
+    };
+  }
+
+  ns.getDefaultFocusState = function getDefaultFocusState() {
+    return {
+      visible: false,
+      mode: "clock",
+      layout: "stacked",
+      use24Hour: true,
+      showSeconds: true,
+      x: 24,
+      y: 24,
+      countdown: getCountdownDefaults(),
+      stopwatch: {
+        elapsedMs: 0,
+        startedAt: null,
+        isRunning: false
+      },
+      breakCycle: getCycleDefaults("breakCycle"),
+      study: getCycleDefaults("study")
+    };
+  };
+
+  ns.normalizeFocusState = function normalizeFocusState(raw) {
+    const defaults = ns.getDefaultFocusState();
+    const source = raw || {};
+
+    return {
+      visible: Boolean(source.visible),
+      mode: normalizeMode(source.mode),
+      layout: normalizeLayout(source.layout),
+      use24Hour: source.use24Hour !== false,
+      showSeconds: source.showSeconds !== false,
+      x: normalizeInteger(source.x, 8, 100000, defaults.x),
+      y: normalizeInteger(source.y, 8, 100000, defaults.y),
+      countdown: normalizeCountdown(source.countdown),
+      stopwatch: {
+        elapsedMs: normalizeMs(source.stopwatch && source.stopwatch.elapsedMs, 0),
+        startedAt: normalizeTimestamp(source.stopwatch && source.stopwatch.startedAt),
+        isRunning: Boolean(source.stopwatch && source.stopwatch.isRunning)
+      },
+      breakCycle: normalizeCycle(source.breakCycle, "breakCycle"),
+      study: normalizeCycle(source.study, "study")
+    };
+  };
+
+  ns.mergeFocusState = function mergeFocusState(base, patch) {
+    const current = ns.normalizeFocusState(base);
+    const nextPatch = patch || {};
+    return ns.normalizeFocusState({
+      visible: nextPatch.visible !== undefined ? nextPatch.visible : current.visible,
+      mode: nextPatch.mode || current.mode,
+      layout: nextPatch.layout || current.layout,
+      use24Hour: nextPatch.use24Hour !== undefined ? nextPatch.use24Hour : current.use24Hour,
+      showSeconds: nextPatch.showSeconds !== undefined ? nextPatch.showSeconds : current.showSeconds,
+      x: nextPatch.x !== undefined ? nextPatch.x : current.x,
+      y: nextPatch.y !== undefined ? nextPatch.y : current.y,
+      countdown: Object.assign({}, current.countdown, nextPatch.countdown || {}),
+      stopwatch: Object.assign({}, current.stopwatch, nextPatch.stopwatch || {}),
+      breakCycle: Object.assign({}, current.breakCycle, nextPatch.breakCycle || {}),
+      study: Object.assign({}, current.study, nextPatch.study || {})
+    });
   };
 
   // ── Formato de fecha legible ──────────────────────────────────────────────

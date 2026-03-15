@@ -222,6 +222,108 @@
       <div class="section-card section-card--soft">
         <div class="section-card__header">
           <div>
+            <p class="section-label">Reloj flotante</p>
+            <p class="section-help">Pon un reloj bonito sobre la pagina y alterna entre reloj, cronometro, cuenta atras, descansos y pomodoro.</p>
+          </div>
+        </div>
+
+        <div class="focus-config">
+          <div class="focus-config__grid">
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-mode">Modo</label>
+              <select id="focus-mode" class="fc-select">
+                <option value="clock">Reloj</option>
+                <option value="stopwatch">Cronometro</option>
+                <option value="countdown">Cuenta atras</option>
+                <option value="breakCycle">Ciclos de descanso</option>
+                <option value="study">Pomodoro</option>
+              </select>
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-layout">Formato</label>
+              <select id="focus-layout" class="fc-select">
+                <option value="stacked">Aura</option>
+                <option value="split">Segmentado</option>
+                <option value="minimal">Minimal</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="focus-clock-fields" class="focus-config__grid">
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-hour-format">Hora</label>
+              <select id="focus-hour-format" class="fc-select">
+                <option value="24">24 horas</option>
+                <option value="12">12 horas</option>
+              </select>
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-seconds">Segundos</label>
+              <select id="focus-seconds" class="fc-select">
+                <option value="on">Visibles</option>
+                <option value="off">Ocultos</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="focus-countdown-fields" class="focus-config__grid" hidden>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-countdown-minutes">Minutos</label>
+              <input id="focus-countdown-minutes" class="search-input" type="number" min="1" max="600" value="25" />
+            </div>
+          </div>
+
+          <div id="focus-break-fields" class="focus-config__grid" hidden>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-break-focus">Trabajo</label>
+              <input id="focus-break-focus" class="search-input" type="number" min="1" max="600" value="52" />
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-break-rest">Descanso</label>
+              <input id="focus-break-rest" class="search-input" type="number" min="1" max="180" value="17" />
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-break-long">Descanso largo</label>
+              <input id="focus-break-long" class="search-input" type="number" min="1" max="240" value="30" />
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-break-rounds">Rondas</label>
+              <input id="focus-break-rounds" class="search-input" type="number" min="1" max="12" value="4" />
+            </div>
+          </div>
+
+          <div id="focus-study-fields" class="focus-config__grid" hidden>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-study-focus">Estudio</label>
+              <input id="focus-study-focus" class="search-input" type="number" min="1" max="600" value="25" />
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-study-rest">Descanso</label>
+              <input id="focus-study-rest" class="search-input" type="number" min="1" max="180" value="5" />
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-study-long">Descanso largo</label>
+              <input id="focus-study-long" class="search-input" type="number" min="1" max="240" value="15" />
+            </div>
+            <div class="fc-config-row">
+              <label class="fc-field-label" for="focus-study-rounds">Rondas</label>
+              <input id="focus-study-rounds" class="search-input" type="number" min="1" max="12" value="4" />
+            </div>
+          </div>
+
+          <div class="action-row action-row--stack-mobile">
+            <button id="btn-focus-toggle" class="secondary-btn" type="button">Mostrar en pantalla</button>
+            <button id="btn-focus-run" class="primary-btn" type="button">Empezar</button>
+            <button id="btn-focus-reset" class="ghost-btn" type="button">Reset</button>
+          </div>
+          <button id="btn-focus-center" class="ghost-btn ghost-btn--full" type="button">Centrar reloj</button>
+          <p id="focus-status" class="status-line"></p>
+        </div>
+      </div>
+
+      <div class="section-card section-card--soft">
+        <div class="section-card__header">
+          <div>
             <p class="section-label">Modo estudio</p>
             <p class="section-help">Genera tarjetas a partir de los resaltados guardados.</p>
           </div>

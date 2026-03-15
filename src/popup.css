@@ -1044,12 +1044,31 @@ kbd {
   margin-bottom: 10px;
 }
 
+.focus-config {
+  display: grid;
+  gap: 12px;
+}
+
+.focus-config__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.focus-config__grid[hidden] {
+  display: none;
+}
+
 .fc-field-label {
   color: var(--popup-text-soft);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.focus-config .search-input {
+  min-height: 40px;
 }
 
 .fc-progress-row {

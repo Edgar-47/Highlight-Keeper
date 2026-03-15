@@ -154,6 +154,21 @@
     return next;
   };
 
+  HighlightStorage.prototype.getFocusState = async function getFocusState() {
+    const items = await this._get([ns.FOCUS_STORAGE_KEY]);
+    return ns.normalizeFocusState(items[ns.FOCUS_STORAGE_KEY]);
+  };
+
+  HighlightStorage.prototype.saveFocusState = async function saveFocusState(patch, options) {
+    const replace = Boolean(options && options.replace);
+    const next = replace
+      ? ns.normalizeFocusState(patch)
+      : ns.mergeFocusState(await this.getFocusState(), patch || {});
+
+    await this._set({ [ns.FOCUS_STORAGE_KEY]: next });
+    return next;
+  };
+
   // ═══════════════════════════════════════════════════════════
   // EXPORT / IMPORT
   // ═══════════════════════════════════════════════════════════

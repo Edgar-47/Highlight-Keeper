@@ -319,3 +319,336 @@
   font-size: 10px;
   opacity: 0.75;
 }
+
+/* Floating focus clock and study widget */
+.ph-focus-overlay {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 2147483200;
+  width: min(340px, calc(100vw - 24px));
+  font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+  color: #fbf8ff;
+  pointer-events: auto;
+  will-change: transform;
+}
+
+.ph-focus-overlay[hidden] {
+  display: none !important;
+}
+
+.ph-focus-card {
+  position: relative;
+  overflow: hidden;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 197, 120, 0.24), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(124, 92, 255, 0.34), transparent 42%),
+    linear-gradient(145deg, rgba(17, 18, 31, 0.94), rgba(37, 22, 53, 0.92));
+  box-shadow:
+    0 24px 70px rgba(7, 7, 16, 0.42),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(24px);
+}
+
+.ph-focus-card__glow {
+  position: absolute;
+  inset: -24% auto auto -16%;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 68%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.ph-focus__header,
+.ph-focus__controls,
+.ph-focus__modes,
+.ph-focus__quick,
+.ph-focus__header-side {
+  display: flex;
+  align-items: center;
+}
+
+.ph-focus__header {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ph-focus__drag,
+.ph-focus__hide,
+.ph-focus__mode,
+.ph-focus__control,
+.ph-focus__chip {
+  border: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.ph-focus__drag {
+  padding: 0;
+  background: transparent;
+  color: rgba(251,248,255,0.72);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: grab;
+}
+
+.ph-focus-overlay.is-dragging .ph-focus__drag,
+.ph-focus__drag:active {
+  cursor: grabbing;
+}
+
+.ph-focus__header-side {
+  gap: 10px;
+}
+
+.ph-focus__micro {
+  font-size: 10px;
+  color: rgba(251,248,255,0.62);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ph-focus__hide {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.ph-focus__hide:hover {
+  background: rgba(255,255,255,0.18);
+  transform: scale(1.04);
+}
+
+.ph-focus__modes {
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ph-focus__mode {
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(251,248,255,0.76);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.ph-focus__mode:hover,
+.ph-focus__mode.is-active {
+  background: rgba(255,255,255,0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.ph-focus__body {
+  position: relative;
+  z-index: 1;
+}
+
+.ph-focus__eyebrow,
+.ph-focus__meta {
+  margin: 0;
+}
+
+.ph-focus__eyebrow {
+  color: rgba(251,248,255,0.72);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ph-focus__readout {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 10px 0 8px;
+}
+
+.ph-focus__segment-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.ph-focus__segment {
+  min-width: 56px;
+  padding: 12px 10px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  text-align: center;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.ph-focus__divider {
+  color: rgba(251,248,255,0.56);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  transform: translateY(-4px);
+}
+
+.ph-focus__suffix {
+  padding-bottom: 9px;
+  color: rgba(251,248,255,0.72);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.ph-focus__meta {
+  color: rgba(251,248,255,0.76);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ph-focus__progress {
+  height: 7px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.ph-focus__progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffcb74, #ff8d72, #9f8bff);
+  transition: width 180ms ease;
+}
+
+.ph-focus__quick {
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.ph-focus__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ph-focus__chip--ghost {
+  background: rgba(255,255,255,0.08);
+  color: rgba(251,248,255,0.74);
+}
+
+.ph-focus__chip--interactive {
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease;
+}
+
+.ph-focus__chip--interactive:hover,
+.ph-focus__chip--interactive.is-active {
+  background: rgba(255,255,255,0.24);
+  transform: translateY(-1px);
+}
+
+.ph-focus__controls {
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ph-focus__control {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(251,248,255,0.86);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.ph-focus__control:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.16);
+}
+
+.ph-focus__control--primary {
+  background: linear-gradient(135deg, rgba(255, 203, 116, 0.92), rgba(255, 139, 112, 0.94));
+  color: #19131b;
+}
+
+.ph-focus-overlay[data-layout="split"] .ph-focus__segment {
+  min-width: 64px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.14);
+}
+
+.ph-focus-overlay[data-layout="minimal"] .ph-focus-card {
+  padding: 12px;
+  border-radius: 24px;
+}
+
+.ph-focus-overlay[data-layout="minimal"] .ph-focus__modes {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ph-focus-overlay[data-layout="minimal"] .ph-focus__segment {
+  min-width: 48px;
+  padding: 8px 8px;
+  border-radius: 15px;
+  font-size: 30px;
+}
+
+.ph-focus-overlay[data-layout="minimal"] .ph-focus__divider {
+  font-size: 26px;
+  transform: none;
+}
+
+.ph-focus-overlay[data-layout="minimal"] .ph-focus__meta {
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .ph-focus-overlay {
+    width: calc(100vw - 20px);
+  }
+
+  .ph-focus__segment {
+    min-width: 48px;
+    font-size: 34px;
+  }
+
+  .ph-focus__controls {
+    flex-wrap: wrap;
+  }
+
+  .ph-focus__control {
+    min-width: calc(50% - 4px);
+  }
+}

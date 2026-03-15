@@ -34,7 +34,7 @@
     return new Promise(function(resolve, reject) {
       chrome.scripting.insertCSS({ target: { tabId }, files: ["src/styles.css"] }, function() {
         chrome.scripting.executeScript(
-          { target: { tabId }, files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/content.js"] },
+          { target: { tabId }, files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/focus.js", "src/content.js"] },
           function() {
             if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
             resolve();
@@ -810,6 +810,8 @@
     const tab = document.querySelector('[data-tab="study"]');
     if (!tab) return;
 
+    initFocusPanel();
+
     // Export buttons
     $("btn-export-md").addEventListener("click", function()        { exportFormatted("md"); });
     $("btn-export-txt").addEventListener("click", function()       { exportFormatted("txt"); });
@@ -991,6 +993,245 @@
     $("fc-btn-flip").textContent = _fcFlipped ? "Mostrar pregunta" : "Mostrar respuesta";
   }
 
+  function clampInt(value, min, max, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.min(Math.max(Math.round(numeric), min), max);
+  }
+
+  function focusModeLabel(mode) {
+    const labels = {
+      clock: "Reloj",
+      stopwatch: "Cronometro",
+      countdown: "Cuenta atras",
+      breakCycle: "Ciclos de descanso",
+      study: "Pomodoro"
+    };
+    return labels[mode] || "Reloj";
+  }
+
+  function focusLayoutLabel(layout) {
+    const labels = {
+      stacked: "Aura",
+      split: "Segmentado",
+      minimal: "Minimal"
+    };
+    return labels[layout] || "Aura";
+  }
+
+  function cyclePhaseLabel(phase) {
+    const labels = {
+      focus: "Enfoque",
+      break: "Descanso corto",
+      longBreak: "Descanso largo"
+    };
+    return labels[phase] || "Enfoque";
+  }
+
+  function focusTimeSummary(state) {
+    const now = Date.now();
+
+    if (state.mode === "countdown") {
+      const remaining = state.countdown.isRunning && state.countdown.endsAt
+        ? Math.max(0, state.countdown.endsAt - now)
+        : state.countdown.remainingMs;
+      return Math.ceil(remaining / 60000) + " min";
+    }
+
+    if (state.mode === "breakCycle" || state.mode === "study") {
+      const cycle = state[state.mode];
+      const remaining = cycle.isRunning && cycle.endsAt
+        ? Math.max(0, cycle.endsAt - now)
+        : cycle.remainingMs;
+      return cyclePhaseLabel(cycle.phase) + " · " + Math.ceil(remaining / 60000) + " min";
+    }
+
+    return "";
+  }
+
+  function buildFocusStatus(state) {
+    if (!state.visible) {
+      return focusModeLabel(state.mode) + " oculto. Se mostrara en la siguiente pagina compatible.";
+    }
+
+    if (state.mode === "clock") {
+      return "Reloj visible en formato " + focusLayoutLabel(state.layout) + ".";
+    }
+
+    if (state.mode === "stopwatch") {
+      return state.stopwatch.isRunning ? "Cronometro corriendo en pantalla." : "Cronometro listo para arrancar.";
+    }
+
+    if (state.mode === "countdown") {
+      return state.countdown.isRunning
+        ? "Cuenta atras activa: " + focusTimeSummary(state) + "."
+        : "Cuenta atras lista en " + state.countdown.durationMinutes + " min.";
+    }
+
+    const cycle = state[state.mode];
+    return cycle.isRunning
+      ? focusModeLabel(state.mode) + " activo: " + focusTimeSummary(state) + "."
+      : focusModeLabel(state.mode) + " listo. " + cycle.focusMinutes + "/" + cycle.breakMinutes + " min.";
+  }
+
+  function renderFocusPanel(state) {
+    const focusState = ns.normalizeFocusState(state);
+    const isClock = focusState.mode === "clock";
+    const isCountdown = focusState.mode === "countdown";
+    const isBreak = focusState.mode === "breakCycle";
+    const isStudy = focusState.mode === "study";
+
+    $("focus-mode").value = focusState.mode;
+    $("focus-layout").value = focusState.layout;
+    $("focus-hour-format").value = focusState.use24Hour ? "24" : "12";
+    $("focus-seconds").value = focusState.showSeconds ? "on" : "off";
+    $("focus-countdown-minutes").value = String(focusState.countdown.durationMinutes);
+    $("focus-break-focus").value = String(focusState.breakCycle.focusMinutes);
+    $("focus-break-rest").value = String(focusState.breakCycle.breakMinutes);
+    $("focus-break-long").value = String(focusState.breakCycle.longBreakMinutes);
+    $("focus-break-rounds").value = String(focusState.breakCycle.rounds);
+    $("focus-study-focus").value = String(focusState.study.focusMinutes);
+    $("focus-study-rest").value = String(focusState.study.breakMinutes);
+    $("focus-study-long").value = String(focusState.study.longBreakMinutes);
+    $("focus-study-rounds").value = String(focusState.study.rounds);
+
+    $("focus-clock-fields").hidden = !isClock;
+    $("focus-countdown-fields").hidden = !isCountdown;
+    $("focus-break-fields").hidden = !isBreak;
+    $("focus-study-fields").hidden = !isStudy;
+
+    $("btn-focus-toggle").textContent = focusState.visible ? "Ocultar de la pantalla" : "Mostrar en pantalla";
+    $("btn-focus-run").textContent = isClock
+      ? (focusState.visible ? "Actualizar reloj" : "Mostrar reloj")
+      : (focusState[focusState.mode].isRunning ? "Pausar" : "Empezar");
+    $("btn-focus-reset").textContent = isClock ? "Ocultar" : "Reset";
+  }
+
+  async function saveFocusPatch(patch, successMessage) {
+    try {
+      const nextState = await storage.saveFocusState(patch);
+      renderFocusPanel(nextState);
+      setStatus("focus-status", successMessage || buildFocusStatus(nextState));
+      if (currentTab) {
+        try {
+          await ensureTabReady();
+        } catch (_error) {}
+      }
+    } catch (err) {
+      setStatus("focus-status", err.message, true);
+    }
+  }
+
+  async function runFocusAction(action, payload) {
+    try {
+      if (!currentTab) throw new Error("Abre una pagina web compatible para usar el reloj.");
+      await ensureTabReady();
+      const resp = await sendMessage({ type: "FOCUS_ACTION", action: action, payload: payload || {} });
+      if (!resp || !resp.ok) throw new Error(resp ? resp.error : "Sin respuesta.");
+      const nextState = resp.data && resp.data.focusState ? resp.data.focusState : await storage.getFocusState();
+      renderFocusPanel(nextState);
+      setStatus("focus-status", buildFocusStatus(nextState));
+    } catch (err) {
+      setStatus("focus-status", err.message, true);
+    }
+  }
+
+  function initFocusPanel() {
+    $("focus-mode").addEventListener("change", function(e) {
+      if (currentTab) {
+        runFocusAction("SET_MODE", { mode: e.target.value });
+        return;
+      }
+      saveFocusPatch({ mode: e.target.value }, "Modo actualizado.");
+    });
+
+    $("focus-layout").addEventListener("change", function(e) {
+      saveFocusPatch({ layout: e.target.value }, "Formato actualizado.");
+    });
+
+    $("focus-hour-format").addEventListener("change", function(e) {
+      saveFocusPatch({ use24Hour: e.target.value === "24" }, "Formato horario actualizado.");
+    });
+
+    $("focus-seconds").addEventListener("change", function(e) {
+      saveFocusPatch({ showSeconds: e.target.value === "on" }, "Visibilidad de segundos actualizada.");
+    });
+
+    $("focus-countdown-minutes").addEventListener("change", function(e) {
+      saveFocusPatch({
+        countdown: {
+          durationMinutes: clampInt(e.target.value, 1, 600, 25),
+          remainingMs: clampInt(e.target.value, 1, 600, 25) * 60 * 1000,
+          endsAt: null,
+          isRunning: false
+        }
+      }, "Cuenta atras ajustada.");
+    });
+
+    ["focus-break-focus", "focus-break-rest", "focus-break-long", "focus-break-rounds"].forEach(function(id) {
+      $(id).addEventListener("change", function() {
+        saveFocusPatch({
+          breakCycle: {
+            focusMinutes: clampInt($("focus-break-focus").value, 1, 600, 52),
+            breakMinutes: clampInt($("focus-break-rest").value, 1, 180, 17),
+            longBreakMinutes: clampInt($("focus-break-long").value, 1, 240, 30),
+            rounds: clampInt($("focus-break-rounds").value, 1, 12, 4),
+            currentRound: 1,
+            phase: "focus",
+            remainingMs: clampInt($("focus-break-focus").value, 1, 600, 52) * 60 * 1000,
+            endsAt: null,
+            isRunning: false
+          }
+        }, "Ciclo de descanso ajustado.");
+      });
+    });
+
+    ["focus-study-focus", "focus-study-rest", "focus-study-long", "focus-study-rounds"].forEach(function(id) {
+      $(id).addEventListener("change", function() {
+        saveFocusPatch({
+          study: {
+            focusMinutes: clampInt($("focus-study-focus").value, 1, 600, 25),
+            breakMinutes: clampInt($("focus-study-rest").value, 1, 180, 5),
+            longBreakMinutes: clampInt($("focus-study-long").value, 1, 240, 15),
+            rounds: clampInt($("focus-study-rounds").value, 1, 12, 4),
+            currentRound: 1,
+            phase: "focus",
+            remainingMs: clampInt($("focus-study-focus").value, 1, 600, 25) * 60 * 1000,
+            endsAt: null,
+            isRunning: false
+          }
+        }, "Pomodoro ajustado.");
+      });
+    });
+
+    $("btn-focus-toggle").addEventListener("click", async function() {
+      const state = await storage.getFocusState();
+      await saveFocusPatch({ visible: !state.visible }, !state.visible ? "Reloj visible." : "Reloj oculto.");
+    });
+
+    $("btn-focus-run").addEventListener("click", async function() {
+      const state = await storage.getFocusState();
+      if (state.mode === "clock") {
+        await saveFocusPatch({ visible: true }, "Reloj mostrado en la pagina.");
+        return;
+      }
+      await runFocusAction("TOGGLE_RUN");
+    });
+
+    $("btn-focus-reset").addEventListener("click", async function() {
+      const state = await storage.getFocusState();
+      if (state.mode === "clock") {
+        await saveFocusPatch({ visible: false }, "Reloj oculto.");
+        return;
+      }
+      await runFocusAction("RESET_MODE");
+    });
+
+    $("btn-focus-center").addEventListener("click", function() {
+      runFocusAction("CENTER");
+    });
+  }
+
   // ═══════════════════════════════════════════════════════════
   // SIDEBAR TOGGLE (from popup)
   // ═══════════════════════════════════════════════════════════
@@ -1085,6 +1326,10 @@
     $("custom-color-input").value = settings.customColor;
     renderSettings();
     initMoreColorsToggle();
+
+    const focusState = await storage.getFocusState();
+    renderFocusPanel(focusState);
+    setStatus("focus-status", buildFocusStatus(focusState));
 
     // Si el color guardado es extra, abrir el panel automáticamente
     if (settings.selectedColor && settings.selectedColor.startsWith("ex-")) {
@@ -1228,7 +1473,14 @@
     });
 
     // Escuchar cambios de storage (por si otra pestana modifica datos)
-    chrome.storage.onChanged.addListener(function() { void refresh(); });
+    chrome.storage.onChanged.addListener(async function(changes) {
+      void refresh();
+      if (changes[ns.FOCUS_STORAGE_KEY]) {
+        const nextState = await storage.getFocusState();
+        renderFocusPanel(nextState);
+        setStatus("focus-status", buildFocusStatus(nextState));
+      }
+    });
 
     await refresh();
   }
