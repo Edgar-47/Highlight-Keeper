@@ -1,0 +1,220 @@
+:root {
+  --pdf-bg: #f4efe6;
+  --pdf-ink: #1d1d1f;
+  --pdf-muted: #6f6355;
+  --pdf-panel: rgba(255, 250, 243, 0.9);
+  --pdf-line: rgba(122, 94, 53, 0.16);
+  --pdf-shadow: 0 24px 60px rgba(51, 37, 17, 0.14);
+  --pdf-accent: #a8550f;
+  --pdf-accent-strong: #8a3b12;
+}
+
+html[data-annotate-pdf="true"] {
+  background:
+    radial-gradient(circle at top left, rgba(235, 179, 97, 0.26), transparent 34%),
+    radial-gradient(circle at top right, rgba(145, 184, 221, 0.22), transparent 28%),
+    linear-gradient(180deg, #f8f2e8 0%, var(--pdf-bg) 48%, #efe6d8 100%);
+  color: var(--pdf-ink);
+}
+
+body.annotate-pdf-app {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--pdf-ink);
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+.pdf-shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 28px 18px;
+  backdrop-filter: blur(18px);
+  background: rgba(249, 243, 234, 0.88);
+  border-bottom: 1px solid var(--pdf-line);
+}
+
+.pdf-shell__brand {
+  min-width: 0;
+}
+
+.pdf-shell__eyebrow,
+.pdf-shell__panel-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pdf-accent);
+}
+
+.pdf-shell__title {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 34px);
+  line-height: 1.08;
+}
+
+.pdf-shell__url,
+.pdf-shell__meta,
+.pdf-shell__panel-copy,
+.pdf-shell__status {
+  margin: 8px 0 0;
+  color: var(--pdf-muted);
+  line-height: 1.5;
+}
+
+.pdf-shell__url {
+  word-break: break-word;
+  font-size: 13px;
+}
+
+.pdf-shell__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pdf-shell__btn {
+  border: 1px solid var(--pdf-line);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--pdf-ink);
+  border-radius: 999px;
+  padding: 11px 16px;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.pdf-shell__btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(122, 94, 53, 0.32);
+}
+
+.pdf-shell__btn--primary {
+  background: linear-gradient(135deg, var(--pdf-accent), var(--pdf-accent-strong));
+  color: #fff8ef;
+  border-color: transparent;
+}
+
+.pdf-shell__main {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  padding: 22px 28px 36px;
+}
+
+.pdf-shell__panel {
+  position: sticky;
+  top: 112px;
+  padding: 18px 18px 20px;
+  border-radius: 24px;
+  border: 1px solid var(--pdf-line);
+  background: var(--pdf-panel);
+  box-shadow: 0 14px 36px rgba(62, 42, 16, 0.08);
+}
+
+.pdf-shell__status {
+  font-weight: 600;
+}
+
+.pdf-shell__error {
+  margin-top: 12px;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.pdf-shell__pages {
+  min-width: 0;
+}
+
+.pdf-page {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 24px;
+  padding: 14px;
+  border-radius: 26px;
+  background: rgba(255, 252, 247, 0.74);
+  box-shadow: var(--pdf-shadow);
+}
+
+.pdf-page__surface {
+  position: relative;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.pdf-page__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pdf-page__textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+  opacity: 1;
+}
+
+.pdf-page__textLayer span,
+.pdf-page__textLayer br {
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0 0;
+  color: transparent;
+  cursor: text;
+}
+
+.pdf-page__textLayer ::selection {
+  background: rgba(245, 158, 11, 0.35);
+}
+
+.pdf-page__badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 4;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(28, 25, 23, 0.72);
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 980px) {
+  .pdf-shell__main {
+    grid-template-columns: 1fr;
+  }
+
+  .pdf-shell__panel {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .pdf-shell__header,
+  .pdf-shell__main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .pdf-shell__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pdf-page {
+    padding: 8px;
+    border-radius: 18px;
+  }
+}

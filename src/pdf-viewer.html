@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annotate PDF</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./sidebar.css" />
+  <link rel="stylesheet" href="./pdf-viewer.css" />
+</head>
+<body class="annotate-pdf-app">
+  <header class="pdf-shell__header">
+    <div class="pdf-shell__brand">
+      <span class="pdf-shell__eyebrow">Annotate PDF</span>
+      <h1 id="pdf-title" class="pdf-shell__title">Cargando documento...</h1>
+      <p id="pdf-url" class="pdf-shell__url"></p>
+    </div>
+
+    <div class="pdf-shell__actions">
+      <button id="pdf-copy-url" class="pdf-shell__btn" type="button">Copiar URL</button>
+      <button id="pdf-reload" class="pdf-shell__btn pdf-shell__btn--primary" type="button">Recargar PDF</button>
+    </div>
+  </header>
+
+  <main class="pdf-shell__main">
+    <aside class="pdf-shell__panel">
+      <p class="pdf-shell__panel-label">Modo PDF</p>
+      <p class="pdf-shell__panel-copy">Selecciona texto igual que en una web normal y usa los mismos botones, atajos y notas de la extensión.</p>
+      <p id="pdf-status" class="pdf-shell__status">Preparando visor...</p>
+      <p id="pdf-meta" class="pdf-shell__meta"></p>
+      <p id="pdf-error" class="pdf-shell__error" hidden></p>
+    </aside>
+
+    <section id="pdf-pages" class="pdf-shell__pages" aria-live="polite"></section>
+  </main>
+
+  <script src="./pdf-bootstrap.js"></script>
+  <script src="./types.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./highlighter.js"></script>
+  <script src="./notes.js"></script>
+  <script src="./focus.js"></script>
+  <script src="./content.js"></script>
+  <script src="./sidebar.js"></script>
+  <script src="./vendor/pdf.min.js"></script>
+  <script src="./pdf-viewer.js"></script>
+</body>
+</html>

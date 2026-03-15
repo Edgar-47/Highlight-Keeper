@@ -419,11 +419,11 @@
 
   async function loadData() {
     var s = getStorage();
-    _highlights = await s.getHighlights(window.location.href);
-    _notes      = await s.getNotes(window.location.href);
+    _highlights = await s.getHighlights(ns.getDocumentUrl());
+    _notes      = await s.getNotes(ns.getDocumentUrl());
 
     var domain = "";
-    try { domain = new URL(window.location.href).hostname.replace(/^www\./, ""); } catch(_) {}
+    try { domain = new URL(ns.getDocumentUrl()).hostname.replace(/^www\./, ""); } catch(_) {}
     var domEl = _q("ann-sb-domain");
     if (domEl) domEl.textContent = trunc(domain, 22) || "—";
 
@@ -548,7 +548,7 @@
 
       // Actions
       row.querySelector('[data-act="fav"]').addEventListener("click", async function() {
-        await getStorage().patchHighlight(window.location.href, record.id, { isFavorite: !record.isFavorite });
+        await getStorage().patchHighlight(ns.getDocumentUrl(), record.id, { isFavorite: !record.isFavorite });
         await loadData();
       });
       row.querySelector('[data-act="tag"]').addEventListener("click", function() {
@@ -557,7 +557,7 @@
       row.querySelector('[data-act="del"]').addEventListener("click", async function() {
         row.style.opacity = "0.3";
         row.style.pointerEvents = "none";
-        await getStorage().removeHighlight(window.location.href, record.id);
+        await getStorage().removeHighlight(ns.getDocumentUrl(), record.id);
         var mark = document.querySelector('[data-ph-id="' + record.id + '"]');
         if (mark) {
           var parent = mark.parentNode;
@@ -624,7 +624,7 @@
   var _orgFilter     = "all";
 
   async function _refreshOrg() {
-    _orgHighlights = await getStorage().getHighlights(window.location.href);
+    _orgHighlights = await getStorage().getHighlights(ns.getDocumentUrl());
     await _renderTagCloud();
     _renderOrgFilterPills();
     _renderOrgList();
@@ -780,7 +780,7 @@
       chip.querySelector("button").addEventListener("click", async function() {
         var next = (_tagRecord.tags||[]).filter(function(t) { return t !== tag; });
         _tagRecord = Object.assign({}, _tagRecord, { tags: next });
-        await getStorage().patchHighlight(window.location.href, _tagRecord.id, { tags: next });
+        await getStorage().patchHighlight(ns.getDocumentUrl(), _tagRecord.id, { tags: next });
         _renderOverlayTags(next);
         _renderOverlaySuggestions(next);
         await _refreshOrg();
@@ -818,7 +818,7 @@
     if (current.includes(tag)) return;
     var next = current.concat([tag]);
     _tagRecord = Object.assign({}, record, { tags: next });
-    await getStorage().patchHighlight(window.location.href, record.id, { tags: next });
+    await getStorage().patchHighlight(ns.getDocumentUrl(), record.id, { tags: next });
     await _addGlobalTag(tag);
     _renderOverlayTags(next);
     _renderOverlaySuggestions(next);
@@ -842,10 +842,10 @@
 
   async function _export(fmt) {
     var s     = getStorage();
-    var hl    = await s.getHighlights(window.location.href);
-    var notes = await s.getNotes(window.location.href);
-    var title = document.title || window.location.href;
-    var url   = window.location.href;
+    var url   = ns.getDocumentUrl();
+    var hl    = await s.getHighlights(url);
+    var notes = await s.getNotes(url);
+    var title = document.title || url;
     var date  = new Date().toLocaleString("es-ES");
     var content = "";
     var mime = "text/plain", ext = "txt";
@@ -927,7 +927,7 @@
   }
 
   async function _copyAll() {
-    var hl = await getStorage().getHighlights(window.location.href);
+    var hl = await getStorage().getHighlights(ns.getDocumentUrl());
     if (!hl.length) return;
     var text = hl.map(function(h, i) {
       return (i+1) + ". " + h.selectedText + (h.comment ? "\n   -> " + h.comment : "");
@@ -947,7 +947,7 @@
     _q("ann-sb-start-fc").addEventListener("click", async function() {
       var colorFilter = _q("ann-sb-fc-color").value;
       var mode        = _q("ann-sb-fc-mode").value;
-      var hl = await getStorage().getHighlights(window.location.href);
+      var hl = await getStorage().getHighlights(ns.getDocumentUrl());
 
       if (colorFilter !== "all") hl = hl.filter(function(h) { return h.color === colorFilter; });
       if (mode === "qa") {

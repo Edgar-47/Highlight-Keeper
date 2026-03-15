@@ -16,6 +16,42 @@
     });
   }
 
+  function resolveCurrentTab(tab) {
+    if (!tab || !tab.id || !tab.url) return null;
+
+    var pdfUrl = ns.extractPdfUrl(tab.url);
+    if (pdfUrl) {
+      return {
+        id: tab.id,
+        url: pdfUrl,
+        tabUrl: tab.url,
+        isPdf: true,
+        isAnnotatePdfViewer: ns.isAnnotatePdfViewerUrl(tab.url)
+      };
+    }
+
+    if (/^https?:/i.test(tab.url)) {
+      return {
+        id: tab.id,
+        url: ns.normalizeUrl(tab.url),
+        tabUrl: tab.url,
+        isPdf: false,
+        isAnnotatePdfViewer: false
+      };
+    }
+
+    return null;
+  }
+
+  async function openPdfInAnnotateViewer() {
+    if (!currentTab || !currentTab.id || !currentTab.isPdf) return false;
+    var viewerUrl = ns.getAnnotatePdfViewerUrl(currentTab.url);
+    await chrome.tabs.update(currentTab.id, { url: viewerUrl });
+    currentTab.tabUrl = viewerUrl;
+    currentTab.isAnnotatePdfViewer = true;
+    return true;
+  }
+
   function sendMessage(message) {
     return new Promise(function(resolve, reject) {
       if (!currentTab || !currentTab.id) {
@@ -32,9 +68,9 @@
 
   function injectIntoTab(tabId) {
     return new Promise(function(resolve, reject) {
-      chrome.scripting.insertCSS({ target: { tabId }, files: ["src/styles.css"] }, function() {
+      chrome.scripting.insertCSS({ target: { tabId }, files: ["src/styles.css", "src/sidebar.css"] }, function() {
         chrome.scripting.executeScript(
-          { target: { tabId }, files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/focus.js", "src/content.js"] },
+          { target: { tabId }, files: ["src/types.js", "src/storage.js", "src/highlighter.js", "src/notes.js", "src/focus.js", "src/content.js", "src/sidebar.js"] },
           function() {
             if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
             resolve();
@@ -46,6 +82,10 @@
 
   async function ensureTabReady() {
     if (!currentTab || !currentTab.id) throw new Error("No hay una pestaña activa disponible.");
+    if (currentTab && currentTab.isPdf && !currentTab.isAnnotatePdfViewer) {
+      await openPdfInAnnotateViewer();
+      throw new Error("He abierto el PDF en el visor de Annotate. Espera a que cargue y vuelve a intentarlo.");
+    }
     try {
       await sendMessage({ type: "RESTORE_HIGHLIGHTS" });
       await sendMessage({ type: "RESTORE_NOTES" });
@@ -1238,6 +1278,10 @@
 
   async function toggleSidebarOnPage() {
     if (!currentTab || !currentTab.id) return;
+    if (currentTab.isPdf && !currentTab.isAnnotatePdfViewer) {
+      await openPdfInAnnotateViewer();
+      return;
+    }
     try {
       await chrome.tabs.sendMessage(currentTab.id, { type: "TOGGLE_SIDEBAR" });
     } catch (_e) {
@@ -1298,9 +1342,7 @@
 
   async function bootstrap() {
     const tab = await queryActiveTab();
-    if (tab && tab.id && tab.url && /^https?:/i.test(tab.url)) {
-      currentTab = { id: tab.id, url: ns.normalizeUrl(tab.url) };
-    }
+    currentTab = resolveCurrentTab(tab);
 
     // Sidebar toggle
     try { $("btn-sidebar").addEventListener("click", toggleSidebarOnPage); } catch (_e) {}

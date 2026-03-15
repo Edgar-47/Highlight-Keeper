@@ -13,6 +13,8 @@
 
   const MENU_ROOT   = "annotate";
   const SETTINGS_KEY = "annotate.settings";
+  const PDF_VIEWER_PATH = "src/pdf-viewer.html";
+  const CHROME_PDF_VIEWER_HOST = "mhjfbmdgcfjbbpaeojofohoefgiehjai";
 
   function createMenus() {
     chrome.contextMenus.removeAll(function() {
@@ -65,6 +67,76 @@
     });
   }
 
+  function normalizeUrl(rawUrl) {
+    try {
+      const url = new URL(rawUrl);
+      url.hash = "";
+      return url.toString();
+    } catch (_e) {
+      return String(rawUrl || "").split("#")[0];
+    }
+  }
+
+  function isAnnotatePdfViewerUrl(rawUrl) {
+    return Boolean(rawUrl) && String(rawUrl).startsWith(chrome.runtime.getURL(PDF_VIEWER_PATH));
+  }
+
+  function isChromePdfViewerUrl(rawUrl) {
+    try {
+      const url = new URL(rawUrl);
+      return url.protocol === "chrome-extension:" &&
+        url.host === CHROME_PDF_VIEWER_HOST &&
+        /\/index\.html$/i.test(url.pathname) &&
+        Boolean(url.searchParams.get("src"));
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function extractPdfUrl(rawUrl) {
+    if (!rawUrl) return null;
+
+    try {
+      const url = new URL(rawUrl);
+      if (isAnnotatePdfViewerUrl(rawUrl) || isChromePdfViewerUrl(rawUrl)) {
+        return url.searchParams.get("src");
+      }
+
+      const normalized = normalizeUrl(rawUrl);
+      const pathname = decodeURIComponent(url.pathname || "").toLowerCase();
+      if (pathname.endsWith(".pdf") || /\.pdf(?:$|[?#])/i.test(normalized)) {
+        return normalized;
+      }
+    } catch (_e) {
+      if (/\.pdf(?:$|[?#])/i.test(String(rawUrl))) {
+        return normalizeUrl(rawUrl);
+      }
+    }
+
+    return null;
+  }
+
+  function getAnnotatePdfViewerUrl(rawPdfUrl) {
+    const url = new URL(chrome.runtime.getURL(PDF_VIEWER_PATH));
+    url.searchParams.set("src", normalizeUrl(rawPdfUrl));
+    return url.toString();
+  }
+
+  async function maybeRedirectPdfTab(tabId, rawUrl) {
+    const pdfUrl = extractPdfUrl(rawUrl);
+    if (!pdfUrl || isAnnotatePdfViewerUrl(rawUrl)) {
+      return false;
+    }
+
+    const viewerUrl = getAnnotatePdfViewerUrl(pdfUrl);
+    if (viewerUrl === rawUrl) {
+      return false;
+    }
+
+    await chrome.tabs.update(tabId, { url: viewerUrl });
+    return true;
+  }
+
   // Inyecta CSS y scripts en la pestaña activa si no están ya cargados
   function injectIntoTab(tabId) {
     return new Promise(function(resolve, reject) {
@@ -81,6 +153,14 @@
   }
 
   async function sendToTab(tabId, message) {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab && tab.url) {
+      const redirected = await maybeRedirectPdfTab(tabId, tab.url);
+      if (redirected) {
+        throw new Error("El PDF se ha abierto en el visor de Annotate. Espera a que cargue y repite la accion.");
+      }
+    }
+
     try {
       await chrome.tabs.sendMessage(tabId, message);
     } catch (_e) {
@@ -122,6 +202,14 @@
 
   chrome.runtime.onInstalled.addListener(createMenus);
   if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(createMenus);
+
+  chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+    var nextUrl = changeInfo.url || (tab && tab.url);
+    if (!nextUrl) return;
+    maybeRedirectPdfTab(tabId, nextUrl).catch(function(error) {
+      console.error("Annotate: no se pudo abrir el visor PDF propio", error);
+    });
+  });
 
   // ── Menú contextual ────────────────────────────────────────────────────────
   chrome.contextMenus.onClicked.addListener(async function(info, tab) {

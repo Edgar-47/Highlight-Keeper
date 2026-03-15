@@ -10,6 +10,8 @@
   ns.HIGHLIGHT_ATTR     = "data-ph-id";
   ns.DYNAMIC_RESTORE_DELAY_MS = 700;
   ns.DEFAULT_COLOR      = "yellow";
+  ns.PDF_VIEWER_PATH    = "src/pdf-viewer.html";
+  ns.CHROME_PDF_VIEWER_HOST = "mhjfbmdgcfjbbpaeojofohoefgiehjai";
 
   // ── Colores de resaltado ──────────────────────────────────────────────────
   ns.COLOR_OPTIONS = [
@@ -112,6 +114,63 @@
 
   ns.getDomain = function getDomain(rawUrl) {
     try { return new URL(rawUrl).hostname; } catch (_e) { return rawUrl; }
+  };
+
+  ns.isAnnotatePdfViewerUrl = function isAnnotatePdfViewerUrl(rawUrl) {
+    if (!rawUrl || !global.chrome || !chrome.runtime || !chrome.runtime.getURL) return false;
+    return String(rawUrl).startsWith(chrome.runtime.getURL(ns.PDF_VIEWER_PATH));
+  };
+
+  ns.isChromePdfViewerUrl = function isChromePdfViewerUrl(rawUrl) {
+    try {
+      const url = new URL(rawUrl);
+      return url.protocol === "chrome-extension:" &&
+        url.host === ns.CHROME_PDF_VIEWER_HOST &&
+        /\/index\.html$/i.test(url.pathname) &&
+        Boolean(url.searchParams.get("src"));
+    } catch (_e) {
+      return false;
+    }
+  };
+
+  ns.extractPdfUrl = function extractPdfUrl(rawUrl) {
+    if (!rawUrl) return null;
+
+    try {
+      const url = new URL(rawUrl);
+      if (ns.isAnnotatePdfViewerUrl(rawUrl) || ns.isChromePdfViewerUrl(rawUrl)) {
+        const embedded = url.searchParams.get("src");
+        return embedded ? ns.normalizeUrl(embedded) : null;
+      }
+
+      const normalizedHref = ns.normalizeUrl(rawUrl);
+      const pathname = decodeURIComponent(url.pathname || "").toLowerCase();
+      if (pathname.endsWith(".pdf") || /\.pdf(?:$|[?#])/i.test(normalizedHref)) {
+        return normalizedHref;
+      }
+    } catch (_e) {
+      if (/\.pdf(?:$|[?#])/i.test(String(rawUrl))) {
+        return ns.normalizeUrl(rawUrl);
+      }
+    }
+
+    return null;
+  };
+
+  ns.getDocumentUrl = function getDocumentUrl() {
+    if (typeof global.__annotateDocumentUrl === "string" && global.__annotateDocumentUrl.trim()) {
+      return ns.normalizeUrl(global.__annotateDocumentUrl);
+    }
+
+    return ns.extractPdfUrl(global.location && global.location.href) ||
+      ns.normalizeUrl((global.location && global.location.href) || "");
+  };
+
+  ns.getAnnotatePdfViewerUrl = function getAnnotatePdfViewerUrl(rawPdfUrl) {
+    const viewerUrl = chrome.runtime.getURL(ns.PDF_VIEWER_PATH);
+    const url = new URL(viewerUrl);
+    url.searchParams.set("src", ns.normalizeUrl(rawPdfUrl));
+    return url.toString();
   };
 
   // ── Utilidades de texto ───────────────────────────────────────────────────

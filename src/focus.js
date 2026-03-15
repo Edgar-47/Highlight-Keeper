@@ -4,19 +4,33 @@
   const ns = global.PersistentHighlighter;
   if (!ns || ns.FocusOverlay) return;
 
-  // ─── Etiquetas ────────────────────────────────────────────────────────────
+  // ─── Constantes ───────────────────────────────────────────────────────────
   const MODE_LABELS = {
     clock:      "Reloj",
-    stopwatch:  "Cronometro",
-    countdown:  "Cuenta atras",
-    breakCycle: "Ciclos de descanso",
+    stopwatch:  "Crono",
+    countdown:  "Cuenta atrás",
+    breakCycle: "Ciclos",
     study:      "Pomodoro"
+  };
+
+  const MODE_ICONS = {
+    clock:      "🕐",
+    stopwatch:  "⏱",
+    countdown:  "⏳",
+    breakCycle: "🔄",
+    study:      "🍅"
   };
 
   const PHASE_LABELS = {
     focus:     "Enfoque",
-    break:     "Descanso corto",
+    break:     "Descanso",
     longBreak: "Descanso largo"
+  };
+
+  const PHASE_ICONS = {
+    focus:     "🎯",
+    break:     "☕",
+    longBreak: "🌿"
   };
 
   const COUNTDOWN_PRESETS = [5, 15, 25, 50];
@@ -28,16 +42,12 @@
     this.root      = null;
     this.timerId   = 0;
     this.dragState = null;
-
-    // ── CORRECCIÓN: guardar la referencia enlazada para poder eliminarla
-    //    después (el código anterior creaba una nueva función cada vez y
-    //    nunca podía eliminar el listener, causando fugas de memoria).
     this._boundStorageListener = this._handleStorageChange.bind(this);
     chrome.storage.onChanged.addListener(this._boundStorageListener);
   }
 
   // ─── Restaurar ────────────────────────────────────────────────────────────
-  FocusOverlay.prototype.restore = async function restore() {
+  FocusOverlay.prototype.restore = async function () {
     this.state = await this.storage.getFocusState();
     const changed = this._reconcileTimers(Date.now());
     if (changed) await this._persist();
@@ -46,8 +56,8 @@
     return this.state;
   };
 
-  // ─── Manejador central de acciones ───────────────────────────────────────
-  FocusOverlay.prototype.handleAction = async function handleAction(action, payload) {
+  // ─── Manejador central de acciones ────────────────────────────────────────
+  FocusOverlay.prototype.handleAction = async function (action, payload) {
     if (!this.state) await this.restore();
 
     const now  = Date.now();
@@ -73,7 +83,7 @@
         break;
 
       case "SET_CLOCK_OPTIONS":
-        if (data.use24Hour  !== undefined) this.state.use24Hour  = Boolean(data.use24Hour);
+        if (data.use24Hour   !== undefined) this.state.use24Hour   = Boolean(data.use24Hour);
         if (data.showSeconds !== undefined) this.state.showSeconds = Boolean(data.showSeconds);
         break;
 
@@ -125,17 +135,10 @@
     return this.state;
   };
 
-  // ─── Listener de cambios externos en storage ──────────────────────────────
+  // ─── Listener de cambios externos ─────────────────────────────────────────
   FocusOverlay.prototype._handleStorageChange = function (changes, areaName) {
     if (areaName !== "local" || !changes[ns.FOCUS_STORAGE_KEY]) return;
-    // ── CORRECCIÓN: si el popup modifica el estado mientras el ticker está
-    //    corriendo, sincronizamos SIN arrancar una segunda instancia del
-    //    ticker ni crear una nueva instancia del listener.
     const incoming = ns.normalizeFocusState(changes[ns.FOCUS_STORAGE_KEY].newValue);
-
-    // Solo actualizamos si el cambio viene del exterior (popup u otra pestaña).
-    // Lo detectamos comparando el campo `visible` y los timestamps de endsAt
-    // que el ticker interno NO modifica salvo al pausar/arrancar.
     this.state = incoming;
     this._reconcileTimers(Date.now());
     this._render();
@@ -152,29 +155,60 @@
 
     const root = document.createElement("section");
     root.className = "ph-focus-overlay";
+    root.setAttribute("aria-label", "Panel de enfoque Annotate");
     root.hidden = true;
+
     root.innerHTML = [
       '<div class="ph-focus-card">',
-      '  <div class="ph-focus-card__glow" aria-hidden="true"></div>',
+      '  <div class="ph-focus-card__bg" aria-hidden="true">',
+      '    <div class="ph-focus-card__orb ph-focus-card__orb--1"></div>',
+      '    <div class="ph-focus-card__orb ph-focus-card__orb--2"></div>',
+      '    <div class="ph-focus-card__orb ph-focus-card__orb--3"></div>',
+      '  </div>',
       '  <header class="ph-focus__header">',
-      '    <button class="ph-focus__drag" type="button">Annotate Focus</button>',
+      '    <button class="ph-focus__drag" type="button" aria-label="Mover panel">',
+      '      <span class="ph-focus__drag-dots" aria-hidden="true">',
+      '        <span></span><span></span><span></span>',
+      '        <span></span><span></span><span></span>',
+      '      </span>',
+      '      <span class="ph-focus__brand">Annotate Focus</span>',
+      '    </button>',
       '    <div class="ph-focus__header-side">',
-      '      <span class="ph-focus__micro" data-role="micro"></span>',
-      '      <button class="ph-focus__hide" type="button" aria-label="Ocultar reloj">✕</button>',
+      '      <span class="ph-focus__mode-badge" data-role="micro"></span>',
+      '      <button class="ph-focus__hide" type="button" aria-label="Ocultar panel">',
+      '        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">',
+      '          <path d="M2 2l6 6M8 2l-6 6"/>',
+      '        </svg>',
+      '      </button>',
       '    </div>',
       '  </header>',
-      '  <div class="ph-focus__modes" data-role="modes"></div>',
+      '  <nav class="ph-focus__modes" data-role="modes" aria-label="Modos de temporización"></nav>',
       '  <div class="ph-focus__body">',
-      '    <p class="ph-focus__eyebrow" data-role="eyebrow"></p>',
-      '    <div class="ph-focus__readout" data-role="readout"></div>',
+      '    <div class="ph-focus__eyebrow-row">',
+      '      <span class="ph-focus__phase-icon" data-role="phase-icon"></span>',
+      '      <p class="ph-focus__eyebrow" data-role="eyebrow"></p>',
+      '    </div>',
+      '    <div class="ph-focus__readout" data-role="readout" aria-live="off" aria-atomic="true"></div>',
       '    <p class="ph-focus__meta" data-role="meta"></p>',
-      '    <div class="ph-focus__progress"><span data-role="progress"></span></div>',
+      '    <div class="ph-focus__progress-track">',
+      '      <div class="ph-focus__progress-fill" data-role="progress"></div>',
+      '    </div>',
       '  </div>',
       '  <div class="ph-focus__quick" data-role="quick"></div>',
       '  <div class="ph-focus__controls">',
       '    <button class="ph-focus__control ph-focus__control--primary" data-action="primary" type="button"></button>',
-      '    <button class="ph-focus__control" data-action="reset" type="button">Reset</button>',
-      '    <button class="ph-focus__control" data-action="center" type="button">Centrar</button>',
+      '    <button class="ph-focus__control ph-focus__control--secondary" data-action="reset" type="button">',
+      '      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">',
+      '        <path d="M3 8a5 5 0 1 0 1-3M3 5V2M3 5h3"/>',
+      '      </svg>',
+      '      <span data-role="reset-label">Reset</span>',
+      '    </button>',
+      '    <button class="ph-focus__control ph-focus__control--secondary" data-action="center" type="button">',
+      '      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">',
+      '        <rect x="4" y="4" width="8" height="8" rx="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>',
+      '      </svg>',
+      '      <span>Centrar</span>',
+      '    </button>',
       '  </div>',
       '</div>'
     ].join("");
@@ -186,7 +220,10 @@
       btn.type = "button";
       btn.className = "ph-focus__mode";
       btn.dataset.mode = mode;
-      btn.textContent = MODE_LABELS[mode];
+      btn.setAttribute("aria-pressed", "false");
+      btn.innerHTML =
+        '<span class="ph-focus__mode-icon" aria-hidden="true">' + MODE_ICONS[mode] + '</span>' +
+        '<span class="ph-focus__mode-label">' + MODE_LABELS[mode] + '</span>';
       btn.addEventListener("click", () => this.handleAction("SET_MODE", { mode }));
       modesHost.appendChild(btn);
     });
@@ -209,15 +246,14 @@
     root.querySelector('[data-action="center"]')
       .addEventListener("click", () => this.handleAction("CENTER"));
 
-    root.querySelector('[data-action="reset"]')
-      .addEventListener("click", () => {
-        if (!this.state) return;
-        if (this.state.mode === "clock") {
-          this.handleAction("SET_VISIBILITY", { visible: false });
-        } else {
-          this.handleAction("RESET_MODE");
-        }
-      });
+    root.querySelector('[data-action="reset"]').addEventListener("click", () => {
+      if (!this.state) return;
+      if (this.state.mode === "clock") {
+        this.handleAction("SET_VISIBILITY", { visible: false });
+      } else {
+        this.handleAction("RESET_MODE");
+      }
+    });
 
     root.querySelector(".ph-focus__drag")
       .addEventListener("pointerdown", e => this._startDrag(e));
@@ -238,6 +274,7 @@
   // ─── Drag ─────────────────────────────────────────────────────────────────
   FocusOverlay.prototype._startDrag = function (event) {
     if (!this.state) return;
+    if (event.target.closest("button:not(.ph-focus__drag), input")) return;
 
     const root    = this._ensureRoot();
     const startX  = Number(this.state.x || 24);
@@ -250,19 +287,16 @@
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
 
-    const move = moveEvent => {
-      if (!this.dragState || moveEvent.pointerId !== this.dragState.pointerId) return;
-      this._setPosition(
-        moveEvent.clientX - this.dragState.offsetX,
-        moveEvent.clientY - this.dragState.offsetY
-      );
+    const move = mv => {
+      if (!this.dragState || mv.pointerId !== this.dragState.pointerId) return;
+      this._setPosition(mv.clientX - this.dragState.offsetX, mv.clientY - this.dragState.offsetY);
       this._renderPosition();
     };
 
-    const finish = async upEvent => {
-      if (!this.dragState || upEvent.pointerId !== this.dragState.pointerId) return;
-      event.currentTarget.removeEventListener("pointermove", move);
-      event.currentTarget.removeEventListener("pointerup",   finish);
+    const finish = async up => {
+      if (!this.dragState || up.pointerId !== this.dragState.pointerId) return;
+      event.currentTarget.removeEventListener("pointermove",   move);
+      event.currentTarget.removeEventListener("pointerup",     finish);
       event.currentTarget.removeEventListener("pointercancel", finish);
       root.classList.remove("is-dragging");
       this.dragState = null;
@@ -277,7 +311,6 @@
 
   // ─── Ticker ───────────────────────────────────────────────────────────────
   FocusOverlay.prototype._ensureTicker = function () {
-    // Siempre cancelar el intervalo previo antes de decidir si creamos uno nuevo.
     if (this.timerId) {
       window.clearInterval(this.timerId);
       this.timerId = 0;
@@ -285,25 +318,14 @@
 
     if (!this.state) return;
 
-    // ── CORRECCIÓN: el modo "clock" necesita ticker aunque no haya nada
-    //    corriendo, para que los segundos avancen en pantalla.
-    const shouldTick =
-      this.state.visible             ||
-      this.state.stopwatch.isRunning ||
-      this.state.countdown.isRunning ||
-      this.state.breakCycle.isRunning ||
-      this.state.study.isRunning;
-
-    if (!shouldTick) return;
-
-    // ── OPTIMIZACIÓN: el reloj solo necesita actualizarse cada segundo;
-    //    los temporizadores cada 250 ms para mantener suavidad visual.
-    //    Usamos 500 ms para el reloj puro y 250 ms para modos activos.
     const isActiveCounting =
       this.state.stopwatch.isRunning  ||
       this.state.countdown.isRunning  ||
       this.state.breakCycle.isRunning ||
       this.state.study.isRunning;
+
+    const shouldTick = this.state.visible || isActiveCounting;
+    if (!shouldTick) return;
 
     const intervalMs = isActiveCounting ? 250 : 500;
 
@@ -311,37 +333,32 @@
       if (!this.state) return;
       const changed = this._reconcileTimers(Date.now());
       if (changed) {
-        // ── CORRECCIÓN: _persist() es asíncrono; se llama sin await dentro
-        //    del ticker para no bloquear el hilo. Los errores se silencian
-        //    porque no son críticos en cada tick.
         this._persist().catch(() => {});
-        // Recalcular si hay que seguir con el mismo intervalo
         this._ensureTicker();
       }
       this._render();
     }, intervalMs);
   };
 
-  // ─── Reconciliar temporizadores ────────────────────────────────────────────
+  // ─── Reconciliar temporizadores ───────────────────────────────────────────
   FocusOverlay.prototype._reconcileTimers = function (now) {
     if (!this.state) return false;
 
     let changed = false;
 
     if (this.state.countdown.isRunning && this.state.countdown.endsAt) {
-      const remaining = this.state.countdown.endsAt - now;
-      if (remaining <= 0) {
+      if (this.state.countdown.endsAt - now <= 0) {
         this.state.countdown.remainingMs = 0;
         this.state.countdown.endsAt      = null;
         this.state.countdown.isRunning   = false;
         changed = true;
+        this._firePhaseComplete("countdown");
       }
     }
 
-    changed = this._reconcileCycle("breakCycle", now) || changed;
-    changed = this._reconcileCycle("study",      now) || changed;
-
-    return changed;
+    const c1 = this._reconcileCycle("breakCycle", now);
+    const c2 = this._reconcileCycle("study",      now);
+    return changed || c1 || c2;
   };
 
   FocusOverlay.prototype._reconcileCycle = function (modeKey, now) {
@@ -352,17 +369,18 @@
 
     while (cycle.isRunning && cycle.endsAt && now >= cycle.endsAt) {
       changed = true;
+      this._firePhaseComplete(modeKey, cycle.phase);
 
       if (cycle.phase === "focus") {
         if (cycle.currentRound >= cycle.rounds) {
-          cycle.phase        = "longBreak";
-          cycle.remainingMs  = cycle.longBreakMinutes * 60000;
-          cycle.endsAt      += cycle.remainingMs;
-          continue;
+          cycle.phase       = "longBreak";
+          cycle.remainingMs = cycle.longBreakMinutes * 60000;
+          cycle.endsAt     += cycle.remainingMs;
+        } else {
+          cycle.phase       = "break";
+          cycle.remainingMs = cycle.breakMinutes * 60000;
+          cycle.endsAt     += cycle.remainingMs;
         }
-        cycle.phase       = "break";
-        cycle.remainingMs = cycle.breakMinutes * 60000;
-        cycle.endsAt     += cycle.remainingMs;
         continue;
       }
 
@@ -374,7 +392,7 @@
         continue;
       }
 
-      // longBreak finalizado → reiniciar ciclo completamente
+      // longBreak finalizado → reiniciar ciclo
       cycle.phase        = "focus";
       cycle.currentRound = 1;
       cycle.remainingMs  = cycle.focusMinutes * 60000;
@@ -383,6 +401,20 @@
     }
 
     return changed;
+  };
+
+  // ─── Notificación de fase completada ─────────────────────────────────────
+  FocusOverlay.prototype._firePhaseComplete = function (modeKey, phase) {
+    try {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      const title = modeKey === "countdown"
+        ? "⏳ Cuenta atrás finalizada"
+        : (PHASE_ICONS[phase] || "⏰") + " " + (PHASE_LABELS[phase] || "Fase") + " completada";
+      const body = modeKey === "countdown"
+        ? "El temporizador ha terminado."
+        : "Es hora de cambiar al siguiente bloque.";
+      new Notification(title, { body, silent: false, tag: "annotate-focus" });
+    } catch (_e) { /* no critical */ }
   };
 
   // ─── Toggle start/pause ───────────────────────────────────────────────────
@@ -459,9 +491,10 @@
   };
 
   FocusOverlay.prototype._resetCurrentMode = function () {
-    if (this.state.mode === "countdown")                                 { this._resetCountdown();            return; }
-    if (this.state.mode === "stopwatch")                                 { this._resetStopwatch();             return; }
-    if (this.state.mode === "breakCycle" || this.state.mode === "study") { this._resetCycle(this.state.mode); return; }
+    if (this.state.mode === "countdown")  { this._resetCountdown(); return; }
+    if (this.state.mode === "stopwatch")  { this._resetStopwatch();  return; }
+    if (this.state.mode === "breakCycle" || this.state.mode === "study")
+      { this._resetCycle(this.state.mode); return; }
   };
 
   FocusOverlay.prototype._resetCountdown = function () {
@@ -470,7 +503,6 @@
     this.state.countdown.isRunning   = false;
   };
 
-  // ── CORRECCIÓN: faltaba este método; el código lo llamaba pero no existía.
   FocusOverlay.prototype._resetStopwatch = function () {
     this.state.stopwatch.elapsedMs  = 0;
     this.state.stopwatch.startedAt  = null;
@@ -525,8 +557,8 @@
   FocusOverlay.prototype._centerPosition = function () {
     const root  = this._ensureRoot();
     root.hidden = false;
-    const width = Math.max(root.offsetWidth, 320);
-    this.state.x = Math.round(Math.max(12, (window.innerWidth - width) / 2));
+    const w     = Math.max(root.offsetWidth, 320);
+    this.state.x = Math.round(Math.max(12, (window.innerWidth - w) / 2));
     this.state.y = 24;
   };
 
@@ -546,93 +578,100 @@
     this.root.style.top  = this.state.y + "px";
   };
 
-  // ─── Construcción de la vista (readout) ───────────────────────────────────
-  FocusOverlay.prototype._buildReadout = function (now) {
-    // ── CORRECCIÓN: `now` se recibe como un timestamp Number (Date.now()).
-    //    En el modo reloj se necesita un objeto Date para llamar a getHours(),
-    //    getMinutes(), etc. El código original mezclaba Date y Number de forma
-    //    inconsistente, causando que `now.getSeconds()` fallara con TypeError
-    //    cuando `now` era un Number. Normalizamos aquí.
-    const nowDate = now instanceof Date ? now : new Date(now);
-    const nowMs   = now instanceof Date ? now.getTime() : now;
+  // ─── Construcción de la vista ─────────────────────────────────────────────
+  FocusOverlay.prototype._buildReadout = function (nowMs) {
+    const nowDate = nowMs instanceof Date ? nowMs : new Date(nowMs);
+    const ms      = nowMs instanceof Date ? nowMs.getTime() : nowMs;
 
     if (this.state.mode === "clock") {
       const parts    = this._getClockParts(nowDate);
       const segments = [parts.hours, parts.minutes];
       if (this.state.showSeconds) segments.push(parts.seconds);
-
-      // Progreso del minuto actual (0–1) para la barra
       const secsInMinute = nowDate.getSeconds() + nowDate.getMilliseconds() / 1000;
-
       return {
+        phaseIcon:    "🕐",
         eyebrow:      "Hora local",
         readout:      this._renderSegmentMarkup(segments, parts.suffix, true),
         meta:         this._formatDate(nowDate),
         progress:     secsInMinute / 60,
         quickHtml:
-          '<span class="ph-focus__chip ph-focus__chip--ghost">' + (this.state.use24Hour ? "24h" : "12h") + "</span>" +
-          '<span class="ph-focus__chip ph-focus__chip--ghost">' + (this.state.showSeconds ? "Con segundos" : "Sin segundos") + "</span>" +
-          '<span class="ph-focus__chip ph-focus__chip--ghost">' + MODE_LABELS[this.state.mode] + "</span>",
-        primaryLabel: "Cambiar formato",
+          this._chip(this.state.use24Hour ? "24h" : "12h", true, "clock-fmt") +
+          this._chip(this.state.showSeconds ? "Con segundos" : "Sin segundos", true, "clock-secs"),
+        primaryLabel: "Vista",
         resetLabel:   "Ocultar",
         isRunning:    false
       };
     }
 
     if (this.state.mode === "stopwatch") {
-      const elapsed = this._getStopwatchElapsed(nowMs);
+      const elapsed = this._getStopwatchElapsed(ms);
       return {
-        eyebrow:      "Cronometro libre",
+        phaseIcon:    "⏱",
+        eyebrow:      "Cronómetro",
         readout:      this._renderSegmentMarkup(this._formatDuration(elapsed, true), "", false),
-        meta:         this.state.stopwatch.isRunning ? "Midiendo en tiempo real" : "Listo para arrancar",
+        meta:         this.state.stopwatch.isRunning ? "Midiendo en tiempo real…" : "Listo para arrancar",
         progress:     Math.min((elapsed % 3600000) / 3600000, 1),
-        quickHtml:
-          '<span class="ph-focus__chip">Tiempo total</span>' +
-          '<span class="ph-focus__chip ph-focus__chip--ghost">' + this._formatLongDuration(elapsed) + "</span>",
-        primaryLabel: this.state.stopwatch.isRunning ? "Pausar" : "Empezar",
+        quickHtml:    this._chip("Total: " + this._formatLongDuration(elapsed), true),
+        primaryLabel: this.state.stopwatch.isRunning ? "Pausar" : "Iniciar",
         resetLabel:   "Reset",
         isRunning:    this.state.stopwatch.isRunning
       };
     }
 
     if (this.state.mode === "countdown") {
-      const remaining = this._getCountdownRemaining(nowMs);
+      const remaining = this._getCountdownRemaining(ms);
       const total     = Math.max(1, this.state.countdown.durationMinutes * 60000);
       return {
-        eyebrow:  "Cuenta atras",
-        readout:  this._renderSegmentMarkup(this._formatDuration(remaining, false), "", false),
-        meta:     this.state.countdown.isRunning
+        phaseIcon:    remaining <= 0 ? "✅" : "⏳",
+        eyebrow:      "Cuenta atrás",
+        readout:      this._renderSegmentMarkup(this._formatDuration(remaining, false), "", false),
+        meta:         this.state.countdown.isRunning
           ? "Quedan " + this._formatLongDuration(remaining)
-          : this.state.countdown.durationMinutes + " minutos configurados",
-        progress: 1 - remaining / total,
-        quickHtml: COUNTDOWN_PRESETS.map(minutes =>
-          '<button class="ph-focus__chip ph-focus__chip--interactive' +
-          (minutes === this.state.countdown.durationMinutes ? " is-active" : "") +
-          '" type="button" data-preset-minutes="' + minutes + '">' + minutes + "m</button>"
-        ).join(""),
-        primaryLabel: this.state.countdown.isRunning ? "Pausar" : "Empezar",
+          : this.state.countdown.durationMinutes + " min configurados",
+        progress:     1 - remaining / total,
+        quickHtml:    COUNTDOWN_PRESETS.map(minutes => {
+          const active = minutes === this.state.countdown.durationMinutes;
+          return '<button class="ph-focus__chip' + (active ? " is-active" : "") +
+            '" type="button" data-preset-minutes="' + minutes + '">' + minutes + " min</button>";
+        }).join(""),
+        primaryLabel: this.state.countdown.isRunning ? "Pausar" : "Iniciar",
         resetLabel:   "Reset",
         isRunning:    this.state.countdown.isRunning
       };
     }
 
     // breakCycle / study
-    const cycle         = this.state[this.state.mode];
-    const remainingMs   = this._getCycleRemaining(this.state.mode, nowMs);
-    const phaseTotal    = this._getCyclePhaseDurationMs(cycle);
+    const cycle       = this.state[this.state.mode];
+    const remainingMs = this._getCycleRemaining(this.state.mode, ms);
+    const phaseTotal  = this._getCyclePhaseDurationMs(cycle);
+    const dots        = this._buildRoundDots(cycle);
     return {
-      eyebrow:  MODE_LABELS[this.state.mode],
-      readout:  this._renderSegmentMarkup(this._formatDuration(remainingMs, false), "", false),
-      meta:     PHASE_LABELS[cycle.phase] + " · ronda " + cycle.currentRound + " de " + cycle.rounds,
-      progress: 1 - remainingMs / Math.max(1, phaseTotal),
+      phaseIcon:    PHASE_ICONS[cycle.phase] || "🎯",
+      eyebrow:      MODE_LABELS[this.state.mode] + " · " + PHASE_LABELS[cycle.phase],
+      readout:      this._renderSegmentMarkup(this._formatDuration(remainingMs, false), "", false),
+      meta:         "Ronda " + cycle.currentRound + " de " + cycle.rounds + dots,
+      progress:     1 - remainingMs / Math.max(1, phaseTotal),
       quickHtml:
-        '<span class="ph-focus__chip">Focus ' + cycle.focusMinutes + "m</span>" +
-        '<span class="ph-focus__chip ph-focus__chip--ghost">Break ' + cycle.breakMinutes + "m</span>" +
-        '<span class="ph-focus__chip ph-focus__chip--ghost">Largo ' + cycle.longBreakMinutes + "m</span>",
-      primaryLabel: cycle.isRunning ? "Pausar" : "Empezar",
+        this._chip("Foco " + cycle.focusMinutes + "m") +
+        this._chip("Pausa " + cycle.breakMinutes + "m", true) +
+        this._chip("Largo " + cycle.longBreakMinutes + "m", true),
+      primaryLabel: cycle.isRunning ? "Pausar" : "Iniciar",
       resetLabel:   "Reset",
       isRunning:    cycle.isRunning
     };
+  };
+
+  FocusOverlay.prototype._buildRoundDots = function (cycle) {
+    let dots = " ";
+    for (let i = 1; i <= cycle.rounds; i++) {
+      dots += i < cycle.currentRound ? "●" : i === cycle.currentRound ? "◉" : "○";
+    }
+    return dots;
+  };
+
+  FocusOverlay.prototype._chip = function (label, ghost, id) {
+    return '<span class="ph-focus__chip' + (ghost ? " ph-focus__chip--ghost" : "") + '"' +
+      (id ? ' data-chip="' + id + '"' : "") + '>' + label + '</span>';
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -640,6 +679,7 @@
     if (!this.state) return;
 
     const root = this._ensureRoot();
+
     if (!this.state.visible) {
       root.hidden = true;
       root.classList.remove("is-visible");
@@ -651,24 +691,59 @@
     root.dataset.layout = this.state.layout;
     root.dataset.mode   = this.state.mode;
 
-    // ── CORRECCIÓN: pasar el timestamp numérico a _buildReadout y dejar
-    //    que él cree el Date solo cuando lo necesita (modo reloj).
     const nowMs = Date.now();
     const view  = this._buildReadout(nowMs);
 
-    root.querySelector('[data-role="eyebrow"]').textContent      = view.eyebrow;
-    root.querySelector('[data-role="readout"]').innerHTML        = view.readout;
-    root.querySelector('[data-role="meta"]').textContent         = view.meta;
-    root.querySelector('[data-role="progress"]').style.width     = Math.max(0, Math.min(view.progress, 1)) * 100 + "%";
-    root.querySelector('[data-role="quick"]').innerHTML          = view.quickHtml;
-    root.querySelector('[data-role="micro"]').textContent        = MODE_LABELS[this.state.mode];
-    root.querySelector('[data-action="primary"]').textContent    = view.primaryLabel;
+    // Detectar si está corriendo para clase CSS de animación
+    root.classList.toggle("is-running", Boolean(view.isRunning));
 
-    const resetBtn = root.querySelector('[data-action="reset"]');
-    resetBtn.textContent = this.state.mode === "clock" ? "Ocultar" : view.resetLabel;
+    // Phase icon
+    const phaseIconEl = root.querySelector('[data-role="phase-icon"]');
+    if (phaseIconEl) phaseIconEl.textContent = view.phaseIcon;
 
+    root.querySelector('[data-role="eyebrow"]').textContent   = view.eyebrow;
+    root.querySelector('[data-role="readout"]').innerHTML     = view.readout;
+    root.querySelector('[data-role="meta"]').textContent      = view.meta;
+    root.querySelector('[data-role="micro"]').textContent     = MODE_LABELS[this.state.mode];
+
+    // Progress
+    const progress = root.querySelector('[data-role="progress"]');
+    const pct      = Math.max(0, Math.min(view.progress, 1)) * 100;
+    progress.style.width = pct + "%";
+
+    // Barra con color según modo
+    root.dataset.phase = this.state.mode === "clock" || this.state.mode === "stopwatch"
+      ? "neutral"
+      : (this.state[this.state.mode] || {}).phase || "focus";
+
+    // Quick chips
+    root.querySelector('[data-role="quick"]').innerHTML = view.quickHtml;
+
+    // Botón primario
+    const primaryBtn = root.querySelector('[data-action="primary"]');
+    if (view.isRunning) {
+      primaryBtn.innerHTML =
+        '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg>' +
+        '<span>' + view.primaryLabel + '</span>';
+    } else if (this.state.mode === "clock") {
+      primaryBtn.innerHTML =
+        '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 8h12M8 2v12"/></svg>' +
+        '<span>' + view.primaryLabel + '</span>';
+    } else {
+      primaryBtn.innerHTML =
+        '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3l8 5-8 5V3z"/></svg>' +
+        '<span>' + view.primaryLabel + '</span>';
+    }
+
+    // Reset label
+    const resetLabel = root.querySelector('[data-role="reset-label"]');
+    if (resetLabel) resetLabel.textContent = this.state.mode === "clock" ? "Ocultar" : "Reset";
+
+    // Mode buttons state
     root.querySelectorAll("[data-mode]").forEach(btn => {
-      btn.classList.toggle("is-active", btn.dataset.mode === this.state.mode);
+      const active = btn.dataset.mode === this.state.mode;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-pressed", String(active));
     });
 
     this._renderPosition();
@@ -676,8 +751,6 @@
 
   // ─── Partes del reloj ─────────────────────────────────────────────────────
   FocusOverlay.prototype._getClockParts = function (nowDate) {
-    // ── CORRECCIÓN: acepta solo objetos Date; el tipo se garantiza antes
-    //    de llamar a este método.
     let hours  = nowDate.getHours();
     let suffix = "";
 
@@ -700,23 +773,23 @@
 
     values.forEach((value, index) => {
       if (showDots && index > 0)
-        parts.push('<span class="ph-focus__divider">:</span>');
-      parts.push('<span class="ph-focus__segment">' + value + "</span>");
+        parts.push('<span class="ph-focus__divider" aria-hidden="true">:</span>');
+      parts.push('<span class="ph-focus__segment">' + value + '</span>');
     });
 
     return (
-      '<div class="ph-focus__segment-row">' + parts.join("") + "</div>" +
-      (suffix ? '<span class="ph-focus__suffix">' + suffix + "</span>" : "")
+      '<div class="ph-focus__segment-row">' + parts.join("") + '</div>' +
+      (suffix ? '<span class="ph-focus__suffix">' + suffix + '</span>' : '')
     );
   };
 
   // ─── Formato de duraciones ────────────────────────────────────────────────
   FocusOverlay.prototype._formatDuration = function (ms, allowHours) {
-    const safeMs        = Math.max(0, Math.round(ms));
-    const totalSeconds  = allowHours ? Math.floor(safeMs / 1000) : Math.ceil(safeMs / 1000);
-    const hours         = Math.floor(totalSeconds / 3600);
-    const minutes       = Math.floor((totalSeconds % 3600) / 60);
-    const seconds       = totalSeconds % 60;
+    const safeMs       = Math.max(0, Math.round(ms));
+    const totalSeconds = allowHours ? Math.floor(safeMs / 1000) : Math.ceil(safeMs / 1000);
+    const hours        = Math.floor(totalSeconds / 3600);
+    const minutes      = Math.floor((totalSeconds % 3600) / 60);
+    const seconds      = totalSeconds % 60;
 
     if (allowHours || hours > 0)
       return [this._pad(hours), this._pad(minutes), this._pad(seconds)];
@@ -755,9 +828,6 @@
   };
 
   // ─── Limpieza ─────────────────────────────────────────────────────────────
-  // ── CORRECCIÓN: exponer destroy() para que el content script pueda
-  //    eliminar el listener de storage al descargar la extensión y así
-  //    evitar acumulación de listeners en páginas de larga duración.
   FocusOverlay.prototype.destroy = function () {
     if (this.timerId) {
       window.clearInterval(this.timerId);

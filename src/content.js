@@ -45,7 +45,7 @@
         return { ok: true, data: { removedCount } };
       }
       case "PATCH_HIGHLIGHT": {
-        const updated = await storage.patchHighlight(window.location.href, msg.highlightId, msg.patch);
+        const updated = await storage.patchHighlight(ns.getDocumentUrl(), msg.highlightId, msg.patch);
         return { ok: true, data: { updated } };
       }
       case "FOCUS_ACTION": {

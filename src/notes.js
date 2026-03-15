@@ -30,7 +30,7 @@
 
   NotesBoard.prototype.restoreNotesForCurrentPage = async function () {
     this._ensureContainer();
-    var notes = await this.storage.getNotes(window.location.href);
+    var notes = await this.storage.getNotes(ns.getDocumentUrl());
     var restored = 0;
     for (var i = 0; i < notes.length; i++) {
       var note = notes[i];
@@ -61,7 +61,7 @@
     var y  = window.scrollY + Math.round((window.innerHeight - H) / 2) + off;
     var ts = new Date().toISOString();
     return {
-      id: ns.createNoteId(), url: ns.normalizeUrl(window.location.href),
+      id: ns.createNoteId(), url: ns.getDocumentUrl(),
       title: "", text: "", color: color, customColor: undefined,
       x: x, y: y, width: W, height: H,
       isMinimized: false, isFavorite: false, tags: [],
@@ -156,7 +156,7 @@
       setTimeout(function () { el.remove(); }, 220);
       self.noteElements.delete(note.id);
       self._disconnectResize(note.id);
-      await self.storage.removeNote(window.location.href, note.id);
+      await self.storage.removeNote(ns.getDocumentUrl(), note.id);
     });
 
     // Minimizar
@@ -252,7 +252,7 @@
     var b = el.querySelector(".ph-note__body");
     return this._normalize({
       id:          id,
-      url:         ns.normalizeUrl(window.location.href),
+      url:         ns.getDocumentUrl(),
       title:       t ? t.value : "",
       text:        b ? b.value : "",
       color:       el.dataset.color       || "yellow",

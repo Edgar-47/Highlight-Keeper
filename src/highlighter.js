@@ -103,7 +103,7 @@
     var container = range ? this._containingMark(range) : null;
     if (container) {
       var cid = container.getAttribute(ns.HIGHLIGHT_ATTR);
-      var recs = await this.storage.getHighlights(window.location.href);
+      var recs = await this.storage.getHighlights(ns.getDocumentUrl());
       var rec  = recs.find(function (r) { return r.id === cid; });
       if (rec) {
         // B1: selección == mark completo → solo cambiar color
@@ -126,7 +126,7 @@
 
     // ── A: texto limpio → nuevo mark ─────────────────────────────────────
     var record = this._buildRecord(range, selText, color,
-      ns.normalizeUrl(window.location.href), resolvedCustom);
+      ns.getDocumentUrl(), resolvedCustom);
     this._wrap(range, record);
     await this.storage.saveHighlight(record);
     return record;
@@ -134,7 +134,7 @@
 
   // ── Split: divide un mark en hasta 3 partes ───────────────────────────────
   HighlightRenderer.prototype._splitMark = async function (markEl, orig, selRange, newColor, newCustom) {
-    var url    = ns.normalizeUrl(window.location.href);
+    var url    = ns.getDocumentUrl();
     var parent = markEl.parentNode;
 
     // Calcular los tres rangos: antes | selección | después
@@ -228,7 +228,7 @@
 
   // ── Merge: elimina marks solapados y crea uno nuevo ──────────────────────
   HighlightRenderer.prototype._mergeAndRecolor = async function (range, marks, selText, color, custom) {
-    var url = ns.normalizeUrl(window.location.href);
+    var url = ns.getDocumentUrl();
     for (var i = 0; i < marks.length; i++) {
       var id = marks[i].getAttribute(ns.HIGHLIGHT_ATTR);
       if (id) {
@@ -263,7 +263,7 @@
   // ══════════════════════════════════════════════════════════════════════════
 
   HighlightRenderer.prototype.restoreHighlightsForCurrentPage = async function () {
-    var records = await this.storage.getHighlights(window.location.href);
+    var records = await this.storage.getHighlights(ns.getDocumentUrl());
     var count   = 0;
     for (var i = 0; i < records.length; i++) {
       var rec = records[i];
@@ -282,7 +282,7 @@
   HighlightRenderer.prototype.removeHighlightById = async function (id) {
     var el = this.findHighlightElement(id);
     if (el) this._unwrap(el);
-    await this.storage.removeHighlight(window.location.href, id);
+    await this.storage.removeHighlight(ns.getDocumentUrl(), id);
     return Boolean(el);
   };
 
@@ -290,7 +290,7 @@
     var self = this;
     var els  = Array.from(document.querySelectorAll("." + ns.HIGHLIGHT_CLASS));
     els.forEach(function (el) { self._unwrap(el); });
-    await this.storage.clearHighlights(window.location.href);
+    await this.storage.clearHighlights(ns.getDocumentUrl());
     return els.length;
   };
 
