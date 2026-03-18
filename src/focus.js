@@ -6,19 +6,15 @@
 
   // ─── Constantes ───────────────────────────────────────────────────────────
   const MODE_LABELS = {
-    clock:      "Reloj",
     stopwatch:  "Crono",
     countdown:  "Cuenta atrás",
     breakCycle: "Ciclos",
-    study:      "Pomodoro"
   };
 
   const MODE_ICONS = {
-    clock:      "🕐",
     stopwatch:  "⏱",
     countdown:  "⏳",
     breakCycle: "🔄",
-    study:      "🍅"
   };
 
   const PHASE_LABELS = {
@@ -73,7 +69,7 @@
         this.state.mode = this._normalizeMode(data.mode);
         if (this.state.mode === "countdown" && this.state.countdown.remainingMs <= 0)
           this._resetCountdown();
-        if ((this.state.mode === "breakCycle" || this.state.mode === "study") &&
+        if (this.state.mode === "breakCycle" &&
             this.state[this.state.mode].remainingMs <= 0)
           this._resetCycle(this.state.mode);
         break;
@@ -93,7 +89,7 @@
         break;
 
       case "CONFIGURE_CYCLE": {
-        const modeKey = data.modeKey === "breakCycle" ? "breakCycle" : "study";
+        const modeKey = "breakCycle";
         const cycle   = this.state[modeKey];
         cycle.focusMinutes     = this._clampInt(data.focusMinutes,     1, 600, cycle.focusMinutes);
         cycle.breakMinutes     = this._clampInt(data.breakMinutes,     1, 180, cycle.breakMinutes);
@@ -233,13 +229,6 @@
 
     root.querySelector('[data-action="primary"]').addEventListener("click", () => {
       if (!this.state) return;
-      if (this.state.mode === "clock") {
-        const next = this.state.layout === "stacked" ? "split"
-                   : this.state.layout === "split"   ? "minimal"
-                   : "stacked";
-        this.handleAction("SET_LAYOUT", { layout: next });
-        return;
-      }
       this.handleAction("TOGGLE_RUN");
     });
 
@@ -248,11 +237,7 @@
 
     root.querySelector('[data-action="reset"]').addEventListener("click", () => {
       if (!this.state) return;
-      if (this.state.mode === "clock") {
-        this.handleAction("SET_VISIBILITY", { visible: false });
-      } else {
-        this.handleAction("RESET_MODE");
-      }
+      this.handleAction("RESET_MODE");
     });
 
     root.querySelector(".ph-focus__drag")
@@ -321,10 +306,9 @@
     const isActiveCounting =
       this.state.stopwatch.isRunning  ||
       this.state.countdown.isRunning  ||
-      this.state.breakCycle.isRunning ||
-      this.state.study.isRunning;
+      this.state.breakCycle.isRunning;
 
-    const shouldTick = this.state.visible || isActiveCounting;
+    const shouldTick = isActiveCounting;
     if (!shouldTick) return;
 
     const intervalMs = isActiveCounting ? 250 : 500;
@@ -357,8 +341,7 @@
     }
 
     const c1 = this._reconcileCycle("breakCycle", now);
-    const c2 = this._reconcileCycle("study",      now);
-    return changed || c1 || c2;
+    return changed || c1;
   };
 
   FocusOverlay.prototype._reconcileCycle = function (modeKey, now) {
@@ -445,8 +428,7 @@
         }
         break;
 
-      case "breakCycle":
-      case "study": {
+      case "breakCycle": {
         const cycle = this.state[this.state.mode];
         if (cycle.isRunning) {
           cycle.remainingMs = this._getCycleRemaining(this.state.mode, now);
@@ -460,10 +442,6 @@
         }
         break;
       }
-
-      default:
-        this.state.visible = true;
-        break;
     }
   };
 
@@ -480,7 +458,7 @@
       this.state.countdown.isRunning   = false;
     }
 
-    ["breakCycle", "study"].forEach(modeKey => {
+    ["breakCycle"].forEach(modeKey => {
       if (exceptMode === modeKey) return;
       const cycle = this.state[modeKey];
       if (!cycle.isRunning) return;
@@ -493,7 +471,7 @@
   FocusOverlay.prototype._resetCurrentMode = function () {
     if (this.state.mode === "countdown")  { this._resetCountdown(); return; }
     if (this.state.mode === "stopwatch")  { this._resetStopwatch();  return; }
-    if (this.state.mode === "breakCycle" || this.state.mode === "study")
+    if (this.state.mode === "breakCycle")
       { this._resetCycle(this.state.mode); return; }
   };
 
@@ -520,8 +498,11 @@
 
   // ─── Helpers de normalización ─────────────────────────────────────────────
   FocusOverlay.prototype._normalizeMode = function (mode) {
-    const MODES = ["clock", "stopwatch", "countdown", "breakCycle", "study"];
-    return MODES.includes(String(mode || "")) ? String(mode) : "clock";
+    const normalized = String(mode || "");
+    if (normalized === "study") return "breakCycle";
+    if (normalized === "clock") return "stopwatch";
+    const MODES = ["stopwatch", "countdown", "breakCycle"];
+    return MODES.includes(normalized) ? normalized : "stopwatch";
   };
 
   FocusOverlay.prototype._normalizeLayout = function (layout) {

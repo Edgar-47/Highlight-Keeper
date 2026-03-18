@@ -48,7 +48,7 @@
       <span class="tab-btn__label">Organizar</span>
     </button>
     <button class="tab-btn" data-tab="study" type="button">
-      <span class="tab-btn__label">Estudio</span>
+      <span class="tab-btn__label">Utilidades</span>
     </button>
     <button class="tab-btn" data-tab="dashboard" type="button">
       <span class="tab-btn__label">Resumen</span>
@@ -222,8 +222,8 @@
       <div class="section-card section-card--soft">
         <div class="section-card__header">
           <div>
-            <p class="section-label">Reloj flotante</p>
-            <p class="section-help">Pon un reloj bonito sobre la pagina y alterna entre reloj, cronometro, cuenta atras, descansos y pomodoro.</p>
+            <p class="section-label">Temporizador flotante</p>
+            <p class="section-help">Pon un panel de enfoque sobre la pagina y alterna entre cronometro, cuenta atras y ciclos de descanso.</p>
           </div>
         </div>
 
@@ -232,11 +232,9 @@
             <div class="fc-config-row">
               <label class="fc-field-label" for="focus-mode">Modo</label>
               <select id="focus-mode" class="fc-select">
-                <option value="clock">Reloj</option>
                 <option value="stopwatch">Cronometro</option>
                 <option value="countdown">Cuenta atras</option>
                 <option value="breakCycle">Ciclos de descanso</option>
-                <option value="study">Pomodoro</option>
               </select>
             </div>
             <div class="fc-config-row">
@@ -245,23 +243,6 @@
                 <option value="stacked">Aura</option>
                 <option value="split">Segmentado</option>
                 <option value="minimal">Minimal</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="focus-clock-fields" class="focus-config__grid">
-            <div class="fc-config-row">
-              <label class="fc-field-label" for="focus-hour-format">Hora</label>
-              <select id="focus-hour-format" class="fc-select">
-                <option value="24">24 horas</option>
-                <option value="12">12 horas</option>
-              </select>
-            </div>
-            <div class="fc-config-row">
-              <label class="fc-field-label" for="focus-seconds">Segundos</label>
-              <select id="focus-seconds" class="fc-select">
-                <option value="on">Visibles</option>
-                <option value="off">Ocultos</option>
               </select>
             </div>
           </div>
@@ -292,92 +273,13 @@
             </div>
           </div>
 
-          <div id="focus-study-fields" class="focus-config__grid" hidden>
-            <div class="fc-config-row">
-              <label class="fc-field-label" for="focus-study-focus">Estudio</label>
-              <input id="focus-study-focus" class="search-input" type="number" min="1" max="600" value="25" />
-            </div>
-            <div class="fc-config-row">
-              <label class="fc-field-label" for="focus-study-rest">Descanso</label>
-              <input id="focus-study-rest" class="search-input" type="number" min="1" max="180" value="5" />
-            </div>
-            <div class="fc-config-row">
-              <label class="fc-field-label" for="focus-study-long">Descanso largo</label>
-              <input id="focus-study-long" class="search-input" type="number" min="1" max="240" value="15" />
-            </div>
-            <div class="fc-config-row">
-              <label class="fc-field-label" for="focus-study-rounds">Rondas</label>
-              <input id="focus-study-rounds" class="search-input" type="number" min="1" max="12" value="4" />
-            </div>
-          </div>
-
           <div class="action-row action-row--stack-mobile">
             <button id="btn-focus-toggle" class="secondary-btn" type="button">Mostrar en pantalla</button>
             <button id="btn-focus-run" class="primary-btn" type="button">Empezar</button>
             <button id="btn-focus-reset" class="ghost-btn" type="button">Reset</button>
           </div>
-          <button id="btn-focus-center" class="ghost-btn ghost-btn--full" type="button">Centrar reloj</button>
+          <button id="btn-focus-center" class="ghost-btn ghost-btn--full" type="button">Centrar panel</button>
           <p id="focus-status" class="status-line"></p>
-        </div>
-      </div>
-
-      <div class="section-card section-card--soft">
-        <div class="section-card__header">
-          <div>
-            <p class="section-label">Modo estudio</p>
-            <p class="section-help">Genera tarjetas a partir de los resaltados guardados.</p>
-          </div>
-        </div>
-
-        <div id="fc-config">
-          <div class="fc-config-row">
-            <label class="fc-field-label" for="fc-color-filter">Filtro</label>
-            <select id="fc-color-filter" class="fc-select">
-              <option value="all">Todos los colores</option>
-              <option value="green">Idea clave</option>
-              <option value="blue">Informacion</option>
-              <option value="purple">Duda</option>
-              <option value="orange">Repasar</option>
-              <option value="red">Importante</option>
-              <option value="yellow">Amarillo</option>
-            </select>
-          </div>
-          <div class="fc-config-row">
-            <label class="fc-field-label" for="fc-mode">Modo</label>
-            <select id="fc-mode" class="fc-select">
-              <option value="recall">Recordar contenido</option>
-              <option value="qa">Comentario a respuesta</option>
-            </select>
-          </div>
-          <button id="btn-start-fc" class="primary-btn primary-btn--full" type="button">Iniciar estudio</button>
-          <p id="fc-status" class="status-line"></p>
-        </div>
-
-        <div id="fc-active" hidden>
-          <div class="fc-progress-row">
-            <span id="fc-progress-text" class="fc-progress-text">1 / 1</span>
-            <div class="fc-progress-bar">
-              <div id="fc-progress-fill" class="fc-progress-fill" style="width:0%"></div>
-            </div>
-          </div>
-
-          <div id="fc-card" class="fc-card">
-            <div id="fc-card-front" class="fc-card__face fc-card__front">
-              <p class="fc-card__label" id="fc-front-label">Fragmento</p>
-              <p class="fc-card__text" id="fc-front-text"></p>
-            </div>
-            <div id="fc-card-back" class="fc-card__face fc-card__back" hidden>
-              <p class="fc-card__label">Respuesta</p>
-              <p class="fc-card__text" id="fc-back-text"></p>
-            </div>
-          </div>
-
-          <div class="fc-btn-row">
-            <button id="fc-btn-flip" class="primary-btn" type="button">Mostrar respuesta</button>
-            <button id="fc-btn-prev" class="secondary-btn" type="button">Anterior</button>
-            <button id="fc-btn-next" class="secondary-btn" type="button">Siguiente</button>
-          </div>
-          <button id="fc-btn-stop" class="ghost-btn ghost-btn--full" type="button">Finalizar sesion</button>
         </div>
       </div>
     </section>

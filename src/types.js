@@ -227,7 +227,9 @@
 
   function normalizeMode(value) {
     const mode = String(value || "");
-    return ["clock", "stopwatch", "countdown", "breakCycle", "study"].includes(mode) ? mode : "clock";
+    if (mode === "study") return "breakCycle";
+    if (mode === "clock") return "stopwatch";
+    return ["stopwatch", "countdown", "breakCycle"].includes(mode) ? mode : "stopwatch";
   }
 
   function normalizeLayout(value) {
@@ -311,7 +313,7 @@
   ns.getDefaultFocusState = function getDefaultFocusState() {
     return {
       visible: false,
-      mode: "clock",
+      mode: "stopwatch",
       layout: "stacked",
       use24Hour: true,
       showSeconds: true,
@@ -331,10 +333,15 @@
   ns.normalizeFocusState = function normalizeFocusState(raw) {
     const defaults = ns.getDefaultFocusState();
     const source = raw || {};
+    const rawMode = String(source.mode || "");
+    const normalizedMode = normalizeMode(rawMode);
+    const breakCycleSource = rawMode === "study"
+      ? (source.study || source.breakCycle)
+      : source.breakCycle;
 
     return {
-      visible: Boolean(source.visible),
-      mode: normalizeMode(source.mode),
+      visible: rawMode === "clock" ? false : Boolean(source.visible),
+      mode: normalizedMode,
       layout: normalizeLayout(source.layout),
       use24Hour: source.use24Hour !== false,
       showSeconds: source.showSeconds !== false,
@@ -346,7 +353,7 @@
         startedAt: normalizeTimestamp(source.stopwatch && source.stopwatch.startedAt),
         isRunning: Boolean(source.stopwatch && source.stopwatch.isRunning)
       },
-      breakCycle: normalizeCycle(source.breakCycle, "breakCycle"),
+      breakCycle: normalizeCycle(breakCycleSource, rawMode === "study" ? "study" : "breakCycle"),
       study: normalizeCycle(source.study, "study")
     };
   };

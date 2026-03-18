@@ -857,13 +857,6 @@
     $("btn-export-txt").addEventListener("click", function()       { exportFormatted("txt"); });
     $("btn-export-json-page").addEventListener("click", function() { exportFormatted("json"); });
     $("btn-export-all-md").addEventListener("click", function()    { exportAll("md"); });
-
-    // Flashcard start
-    $("btn-start-fc").addEventListener("click", startFlashcards);
-    $("fc-btn-stop").addEventListener("click",  stopFlashcards);
-    $("fc-btn-flip").addEventListener("click",  flipCard);
-    $("fc-btn-next").addEventListener("click",  function() { if (_fcIdx < _fcCards.length - 1) { _fcIdx++; showCard(); } });
-    $("fc-btn-prev").addEventListener("click",  function() { if (_fcIdx > 0) { _fcIdx--; showCard(); } });
   }
 
   async function exportFormatted(fmt) {
@@ -1041,13 +1034,11 @@
 
   function focusModeLabel(mode) {
     const labels = {
-      clock: "Reloj",
       stopwatch: "Cronometro",
       countdown: "Cuenta atras",
-      breakCycle: "Ciclos de descanso",
-      study: "Pomodoro"
+      breakCycle: "Ciclos de descanso"
     };
-    return labels[mode] || "Reloj";
+    return labels[mode] || "Temporizador";
   }
 
   function focusLayoutLabel(layout) {
@@ -1078,8 +1069,8 @@
       return Math.ceil(remaining / 60000) + " min";
     }
 
-    if (state.mode === "breakCycle" || state.mode === "study") {
-      const cycle = state[state.mode];
+    if (state.mode === "breakCycle") {
+      const cycle = state.breakCycle;
       const remaining = cycle.isRunning && cycle.endsAt
         ? Math.max(0, cycle.endsAt - now)
         : cycle.remainingMs;
@@ -1092,10 +1083,6 @@
   function buildFocusStatus(state) {
     if (!state.visible) {
       return focusModeLabel(state.mode) + " oculto. Se mostrara en la siguiente pagina compatible.";
-    }
-
-    if (state.mode === "clock") {
-      return "Reloj visible en formato " + focusLayoutLabel(state.layout) + ".";
     }
 
     if (state.mode === "stopwatch") {
@@ -1116,35 +1103,23 @@
 
   function renderFocusPanel(state) {
     const focusState = ns.normalizeFocusState(state);
-    const isClock = focusState.mode === "clock";
     const isCountdown = focusState.mode === "countdown";
     const isBreak = focusState.mode === "breakCycle";
-    const isStudy = focusState.mode === "study";
 
     $("focus-mode").value = focusState.mode;
     $("focus-layout").value = focusState.layout;
-    $("focus-hour-format").value = focusState.use24Hour ? "24" : "12";
-    $("focus-seconds").value = focusState.showSeconds ? "on" : "off";
     $("focus-countdown-minutes").value = String(focusState.countdown.durationMinutes);
     $("focus-break-focus").value = String(focusState.breakCycle.focusMinutes);
     $("focus-break-rest").value = String(focusState.breakCycle.breakMinutes);
     $("focus-break-long").value = String(focusState.breakCycle.longBreakMinutes);
     $("focus-break-rounds").value = String(focusState.breakCycle.rounds);
-    $("focus-study-focus").value = String(focusState.study.focusMinutes);
-    $("focus-study-rest").value = String(focusState.study.breakMinutes);
-    $("focus-study-long").value = String(focusState.study.longBreakMinutes);
-    $("focus-study-rounds").value = String(focusState.study.rounds);
 
-    $("focus-clock-fields").hidden = !isClock;
     $("focus-countdown-fields").hidden = !isCountdown;
     $("focus-break-fields").hidden = !isBreak;
-    $("focus-study-fields").hidden = !isStudy;
 
     $("btn-focus-toggle").textContent = focusState.visible ? "Ocultar de la pantalla" : "Mostrar en pantalla";
-    $("btn-focus-run").textContent = isClock
-      ? (focusState.visible ? "Actualizar reloj" : "Mostrar reloj")
-      : (focusState[focusState.mode].isRunning ? "Pausar" : "Empezar");
-    $("btn-focus-reset").textContent = isClock ? "Ocultar" : "Reset";
+    $("btn-focus-run").textContent = focusState[focusState.mode].isRunning ? "Pausar" : "Empezar";
+    $("btn-focus-reset").textContent = "Reset";
   }
 
   async function saveFocusPatch(patch, successMessage) {
@@ -1164,7 +1139,7 @@
 
   async function runFocusAction(action, payload) {
     try {
-      if (!currentTab) throw new Error("Abre una pagina web compatible para usar el reloj.");
+      if (!currentTab) throw new Error("Abre una pagina web compatible para usar el temporizador.");
       await ensureTabReady();
       const resp = await sendMessage({ type: "FOCUS_ACTION", action: action, payload: payload || {} });
       if (!resp || !resp.ok) throw new Error(resp ? resp.error : "Sin respuesta.");
@@ -1187,14 +1162,6 @@
 
     $("focus-layout").addEventListener("change", function(e) {
       saveFocusPatch({ layout: e.target.value }, "Formato actualizado.");
-    });
-
-    $("focus-hour-format").addEventListener("change", function(e) {
-      saveFocusPatch({ use24Hour: e.target.value === "24" }, "Formato horario actualizado.");
-    });
-
-    $("focus-seconds").addEventListener("change", function(e) {
-      saveFocusPatch({ showSeconds: e.target.value === "on" }, "Visibilidad de segundos actualizada.");
     });
 
     $("focus-countdown-minutes").addEventListener("change", function(e) {
@@ -1226,44 +1193,16 @@
       });
     });
 
-    ["focus-study-focus", "focus-study-rest", "focus-study-long", "focus-study-rounds"].forEach(function(id) {
-      $(id).addEventListener("change", function() {
-        saveFocusPatch({
-          study: {
-            focusMinutes: clampInt($("focus-study-focus").value, 1, 600, 25),
-            breakMinutes: clampInt($("focus-study-rest").value, 1, 180, 5),
-            longBreakMinutes: clampInt($("focus-study-long").value, 1, 240, 15),
-            rounds: clampInt($("focus-study-rounds").value, 1, 12, 4),
-            currentRound: 1,
-            phase: "focus",
-            remainingMs: clampInt($("focus-study-focus").value, 1, 600, 25) * 60 * 1000,
-            endsAt: null,
-            isRunning: false
-          }
-        }, "Pomodoro ajustado.");
-      });
-    });
-
     $("btn-focus-toggle").addEventListener("click", async function() {
       const state = await storage.getFocusState();
-      await saveFocusPatch({ visible: !state.visible }, !state.visible ? "Reloj visible." : "Reloj oculto.");
+      await saveFocusPatch({ visible: !state.visible }, !state.visible ? "Temporizador visible." : "Temporizador oculto.");
     });
 
     $("btn-focus-run").addEventListener("click", async function() {
-      const state = await storage.getFocusState();
-      if (state.mode === "clock") {
-        await saveFocusPatch({ visible: true }, "Reloj mostrado en la pagina.");
-        return;
-      }
       await runFocusAction("TOGGLE_RUN");
     });
 
     $("btn-focus-reset").addEventListener("click", async function() {
-      const state = await storage.getFocusState();
-      if (state.mode === "clock") {
-        await saveFocusPatch({ visible: false }, "Reloj oculto.");
-        return;
-      }
       await runFocusAction("RESET_MODE");
     });
 

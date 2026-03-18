@@ -106,9 +106,6 @@
         <button class="ann-sb__navbtn" data-tab="sb-organize" role="tab">
           ${SVG.tag} Etiquetas
         </button>
-        <button class="ann-sb__navbtn" data-tab="sb-study" role="tab">
-          ${SVG.study} Estudio
-        </button>
       </nav>
 
       <!-- ════ PANEL: HIGHLIGHTS ════ -->
@@ -398,9 +395,6 @@
       inp.value = "";
       await _addTagToRecord(_tagRecord, tag);
     });
-
-    // Flashcards
-    _initFlashcards();
 
     // Close dropdown on outside click
     document.addEventListener("click", function() { _closeDropdown(); });
